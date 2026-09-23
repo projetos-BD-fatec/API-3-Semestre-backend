@@ -17,14 +17,6 @@ public class PreGuia {
     @JoinColumn(name = "ID_USUARIO", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_PRESTADOR", nullable = false)
-    private Prestador prestador;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_EXAME", nullable = false)
-    private Exame exame;
-
     @Column(name = "NM_ANEXO", length = 250)
     private String nmAnexo;
 
@@ -39,13 +31,9 @@ public class PreGuia {
 
     public PreGuia(
             Usuario usuario,
-            Prestador prestador,
-            Exame exame,
             String nmAnexo
     ) {
         this.usuario = usuario;
-        this.prestador = prestador;
-        this.exame = exame;
         this.nmAnexo = nmAnexo;
         this.status = StatusPreGuia.EM_ANALISE;
         this.criadoEm = LocalDateTime.now();
@@ -55,20 +43,16 @@ public class PreGuia {
         this.status = status;
     }
 
+    public void setIdPreGuia(Long idPreGuia) {
+        this.idPreGuia = idPreGuia;
+    }
+
     public Long getIdPreGuia() {
         return idPreGuia;
     }
 
     public Usuario getUsuario() {
         return usuario;
-    }
-
-    public Prestador getPrestador() {
-        return prestador;
-    }
-
-    public Exame getExame() {
-        return exame;
     }
 
     public String getNmAnexo() {

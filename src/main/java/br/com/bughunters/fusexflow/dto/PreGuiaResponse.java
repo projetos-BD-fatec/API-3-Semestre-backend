@@ -2,17 +2,12 @@ package br.com.bughunters.fusexflow.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PreGuiaResponse(
         Long idPreGuia,
-        String nmExame,
-        String nmPrestador,
-        String dsLogradouro,
-        String nrEndereco,
-        String nmBairro,
-        String nmCidade,
-        String sgUf,
-        BigDecimal valor,
+        String nmArquivo,
         String status,
-        LocalDateTime criadoEm
+        LocalDateTime criadoEm,
+        List<PreGuiaItemResponse> itens
 ) {}

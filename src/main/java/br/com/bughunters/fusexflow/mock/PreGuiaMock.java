@@ -17,19 +17,18 @@ public class PreGuiaMock {
 
         PreGuia primeira = new PreGuia(
                 usuarios.get(0),
-                prestadores.get(0),
-                exames.get(0),
                 "FotoWhatsApp"
         );
 
         PreGuia segunda = new PreGuia(
                 usuarios.get(0),
-                prestadores.get(1),
-                exames.get(1),
                 "encaminhamento.pdf"
         );
 
         primeira.setStatus(StatusPreGuia.AUTORIZADA);
+
+        primeira.setIdPreGuia(1L);
+        primeira.setIdPreGuia(2L);
 
         preGuias.add(primeira);
         preGuias.add(segunda);

@@ -1,8 +1,10 @@
 package br.com.bughunters.fusexflow.service;
 
+import br.com.bughunters.fusexflow.dto.PreGuiaItemResponse;
 import br.com.bughunters.fusexflow.dto.PreGuiaResponse;
 import br.com.bughunters.fusexflow.entity.ExamePrestador;
 import br.com.bughunters.fusexflow.mock.ExamePrestadorMock;
+import br.com.bughunters.fusexflow.mock.PreGuiaItemMock;
 import br.com.bughunters.fusexflow.mock.PreGuiaMock;
 import org.springframework.stereotype.Service;
 
@@ -17,24 +19,30 @@ public class PreGuiaService {
                 .stream()
                 .map(preGuia -> {
 
-                    ExamePrestador examePrestador =
-                            ExamePrestadorMock.findByExameIdAndPrestadorId(
-                                    preGuia.getExame().getIdExame(),
-                                    preGuia.getPrestador().getIdPrestador()
-                            );
+                    List<PreGuiaItemResponse> itens =
+                            PreGuiaItemMock.findByPreGuiaId(preGuia.getIdPreGuia())
+                                    .stream()
+                                    .map(item -> new PreGuiaItemResponse(
+                                            item.getIdPreGuiaItem(),
+                                            item.getExame().getDescExame(),
+                                            item.getPrestador().getNmFantasia(),
+                                            item.getPrestador().getDsLogradouro(),
+                                            item.getPrestador().getNrEndereco(),
+                                            item.getPrestador().getDsComplemento(),
+                                            item.getPrestador().getNmBairro(),
+                                            item.getPrestador().getNmCidade(),
+                                            item.getPrestador().getSgUf(),
+                                            item.getValor(),
+                                            item.getStatus().name()
+                                    ))
+                                    .toList();
 
                     return new PreGuiaResponse(
                             preGuia.getIdPreGuia(),
-                            preGuia.getExame().getDescExame(),
-                            preGuia.getPrestador().getNmFantasia(),
-                            preGuia.getPrestador().getDsLogradouro(),
-                            preGuia.getPrestador().getNrEndereco(),
-                            preGuia.getPrestador().getNmBairro(),
-                            preGuia.getPrestador().getNmCidade(),
-                            preGuia.getPrestador().getSgUf(),
-                            examePrestador.getValorContratual(),
+                            preGuia.getNmAnexo(),
                             preGuia.getStatus().name(),
-                            preGuia.getCriadoEm()
+                            preGuia.getCriadoEm(),
+                            itens
                     );
                 })
                 .toList();
