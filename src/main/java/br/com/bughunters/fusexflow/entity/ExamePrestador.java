@@ -45,4 +45,16 @@ public class ExamePrestador {
         this.status = "ATIVO";
         this.inicioVigencia = LocalDate.now();
     }
+
+    public Exame getExame() {
+        return exame;
+    }
+
+    public Prestador getPrestador() {
+        return prestador;
+    }
+
+    public BigDecimal getValorContratual() {
+        return valorContratual;
+    }
 }

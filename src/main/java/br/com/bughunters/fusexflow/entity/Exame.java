@@ -32,4 +32,16 @@ public class Exame {
     public void setIdExame(Long idExame) {
         this.idExame = idExame;
     }
+
+    public Long getIdExame() {
+        return idExame;
+    }
+
+    public CatalogoTuss getCatalogoTuss() {
+        return catalogoTuss;
+    }
+
+    public String getDescExame() {
+        return descExame;
+    }
 }

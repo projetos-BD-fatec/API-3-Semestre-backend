@@ -63,4 +63,7 @@ public class Usuario {
         this.nrTelefone = nrTelefone;
     }
 
+    public void setIdUsuario(Long idUsuario) {
+        this.idUsuario = idUsuario;
+    }
 }

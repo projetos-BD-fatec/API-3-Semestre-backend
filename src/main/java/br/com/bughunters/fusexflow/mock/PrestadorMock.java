@@ -54,6 +54,9 @@ public class PrestadorMock {
                 "SP",
                 "12010000"
         );
+        prestador1.setIdPrestador(1L);
+        prestador2.setIdPrestador(2L);
+        prestador3.setIdPrestador(3L);
 
         prestadores.add(prestador1);
         prestadores.add(prestador2);

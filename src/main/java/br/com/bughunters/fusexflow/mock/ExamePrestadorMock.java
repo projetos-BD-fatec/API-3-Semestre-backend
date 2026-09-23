@@ -48,4 +48,17 @@ public class ExamePrestadorMock {
     public static List<ExamePrestador> getExamesPrestadores() {
         return examesPrestadores;
     }
+
+    public static ExamePrestador findByExameIdAndPrestadorId(
+            Long exameId,
+            Long prestadorId
+    ) {
+        return examesPrestadores.stream()
+                .filter(examePrestador ->
+                        examePrestador.getExame().getIdExame().equals(exameId)
+                                && examePrestador.getPrestador().getIdPrestador().equals(prestadorId)
+                )
+                .findFirst()
+                .orElse(null);
+    }
 }

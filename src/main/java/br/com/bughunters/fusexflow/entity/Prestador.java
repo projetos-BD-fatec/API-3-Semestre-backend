@@ -83,4 +83,40 @@ public class Prestador {
     public void setIdPrestador(Long idPrestador) {
         this.idPrestador = idPrestador;
     }
+
+    public Long getIdPrestador() {
+        return idPrestador;
+    }
+
+    public String getNmPrestador() {
+        return nmPrestador;
+    }
+
+    public String getNmFantasia() {
+        return nmFantasia;
+    }
+
+    public String getDsLogradouro() {
+        return dsLogradouro;
+    }
+
+    public String getNrEndereco() {
+        return nrEndereco;
+    }
+
+    public String getDsComplemento() {
+        return dsComplemento;
+    }
+
+    public String getNmBairro() {
+        return nmBairro;
+    }
+
+    public String getNmCidade() {
+        return nmCidade;
+    }
+
+    public String getSgUf() {
+        return sgUf;
+    }
 }

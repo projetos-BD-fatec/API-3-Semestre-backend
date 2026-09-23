@@ -45,4 +45,7 @@ public class CatalogoTuss {
         this.fimVigencia = fimVigencia;
     }
 
+    public String getCodTuss() {
+        return codTuss;
+    }
 }

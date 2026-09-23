@@ -1,5 +1,6 @@
 package br.com.bughunters.fusexflow.entity;
 
+import br.com.bughunters.fusexflow.enums.StatusPreGuia;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -28,7 +29,7 @@ public class PreGuia {
     private String nmAnexo;
 
     @Column(name = "STATUS", length = 20)
-    private String status;
+    private StatusPreGuia status;
 
     @Column(name = "CRIADO_EM", nullable = false)
     private LocalDateTime criadoEm;
@@ -46,8 +47,39 @@ public class PreGuia {
         this.prestador = prestador;
         this.exame = exame;
         this.nmAnexo = nmAnexo;
-        this.status = "EM ANÁLISE";
+        this.status = StatusPreGuia.EM_ANALISE;
         this.criadoEm = LocalDateTime.now();
     }
 
+    public void setStatus(StatusPreGuia status) {
+        this.status = status;
+    }
+
+    public Long getIdPreGuia() {
+        return idPreGuia;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public Prestador getPrestador() {
+        return prestador;
+    }
+
+    public Exame getExame() {
+        return exame;
+    }
+
+    public String getNmAnexo() {
+        return nmAnexo;
+    }
+
+    public StatusPreGuia getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
 }
