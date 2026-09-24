@@ -34,7 +34,7 @@ public class Usuario {
     @Column(name = "NR_TELEFONE", length = 20)
     private String nrTelefone;
 
-    @Column(name = "FL_ATIVO", length = 1, nullable = false)
+    @Column(name = "FL_ATIVO", columnDefinition = "CHAR(1)", nullable = false)
     private String flAtivo;
 
     @Column(name = "DT_ULTIMO_ACESSO")

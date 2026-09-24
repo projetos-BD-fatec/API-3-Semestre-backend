@@ -26,10 +26,11 @@ public class PreGuiaItem {
     @JoinColumn(name = "ID_EXAME", nullable = false)
     private Exame exame;
 
-    @Column(name = "VALOR")
+    @Column(name = "VALOR", nullable = false, precision = 10, scale = 2)
     private BigDecimal valor;
 
-    @Column(name = "STATUS", length = 20)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", length = 20, nullable = false)
     private StatusPreGuia status;
 
     protected PreGuiaItem() {

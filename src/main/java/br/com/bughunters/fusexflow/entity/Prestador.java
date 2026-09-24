@@ -47,13 +47,13 @@ public class Prestador {
     @Column(name = "NM_CIDADE", length = 100)
     private String nmCidade;
 
-    @Column(name = "SG_UF", length = 2)
+    @Column(name = "SG_UF", columnDefinition = "CHAR(2)")
     private String sgUf;
 
     @Column(name = "NR_CEP", length = 8)
     private String nrCep;
 
-    @Column(name = "FL_ATIVO", length = 1, nullable = false)
+    @Column(name = "FL_ATIVO", columnDefinition = "CHAR(1)", nullable = false)
     private String flAtivo;
 
     @Column(name = "CRIADO_EM", nullable = false)
