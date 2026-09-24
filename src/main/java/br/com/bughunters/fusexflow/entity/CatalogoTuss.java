@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class CatalogoTuss {
 
     @Id
-    @Column(name = "COD_TUSS", length = 50)
+    @Column(name = "COD_TUSS", length = 200)
     private String codTuss;
 
     @Column(name = "DESC_TUSS", length = 250, nullable = false)

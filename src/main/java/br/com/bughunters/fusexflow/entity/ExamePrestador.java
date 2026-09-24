@@ -22,7 +22,7 @@ public class ExamePrestador {
     @JoinColumn(name = "ID_PRESTADOR", nullable = false)
     private Prestador prestador;
 
-    @Column(name = "VALOR_CONTRATUAL", nullable = false)
+    @Column(name = "VALOR_CONTRATUAL", nullable = false, precision = 14, scale = 2)
     private BigDecimal valorContratual;
 
     @Column(name = "STATUS", length = 10, nullable = false)

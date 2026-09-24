@@ -20,7 +20,8 @@ public class PreGuia {
     @Column(name = "NM_ANEXO", length = 250)
     private String nmAnexo;
 
-    @Column(name = "STATUS", length = 20)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", length = 20, nullable = false)
     private StatusPreGuia status;
 
     @Column(name = "CRIADO_EM", nullable = false)
