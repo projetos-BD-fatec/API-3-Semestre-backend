@@ -1,10 +1,13 @@
 package br.com.bughunters.fusexflow.controller;
 
-import br.com.bughunters.fusexflow.dto.PreGuiaResponse;
+import br.com.bughunters.fusexflow.dto.request.PreGuiaRequest;
+import br.com.bughunters.fusexflow.dto.response.PreGuiaResponse;
 import br.com.bughunters.fusexflow.service.PreGuiaService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,5 +23,12 @@ public class PreGuiaController {
     @GetMapping
     public List<PreGuiaResponse> findAll() {
         return preGuiaService.findAll();
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PreGuiaResponse> criar(@RequestPart("encaminhamento") MultipartFile arquivo, @RequestPart("dados")PreGuiaRequest request) {
+        PreGuiaResponse response = preGuiaService.criar(request, arquivo);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

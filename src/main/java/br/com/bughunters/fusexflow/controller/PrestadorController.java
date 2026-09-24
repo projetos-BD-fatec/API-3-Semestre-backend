@@ -1,6 +1,6 @@
 package br.com.bughunters.fusexflow.controller;
 
-import br.com.bughunters.fusexflow.dto.PrestadorResponse;
+import br.com.bughunters.fusexflow.dto.response.PrestadorResponse;
 import br.com.bughunters.fusexflow.service.PrestadorService;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,6 +1,6 @@
 package br.com.bughunters.fusexflow.service;
 
-import br.com.bughunters.fusexflow.dto.PrestadorResponse;
+import br.com.bughunters.fusexflow.dto.response.PrestadorResponse;
 import br.com.bughunters.fusexflow.entity.Prestador;
 import br.com.bughunters.fusexflow.mock.ExamePrestadorMock;
 import br.com.bughunters.fusexflow.mock.PrestadorMock;

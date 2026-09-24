@@ -1,5 +1,6 @@
 package br.com.bughunters.fusexflow.mock;
 
+import br.com.bughunters.fusexflow.entity.Exame;
 import br.com.bughunters.fusexflow.entity.Prestador;
 
 import java.util.ArrayList;
@@ -65,5 +66,12 @@ public class PrestadorMock {
 
     public static List<Prestador> getPrestadores() {
         return prestadores;
+    }
+
+    public static Prestador findById(Long prestadorId) {
+        return prestadores.stream()
+                .filter(item ->
+                        item.getIdPrestador().equals(prestadorId)
+                ).findFirst().orElse(null);
     }
 }

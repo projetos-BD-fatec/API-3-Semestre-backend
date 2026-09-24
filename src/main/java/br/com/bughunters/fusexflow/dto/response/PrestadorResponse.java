@@ -1,4 +1,4 @@
-package br.com.bughunters.fusexflow.dto;
+package br.com.bughunters.fusexflow.dto.response;
 
 public record PrestadorResponse(
         Long idPrestador,

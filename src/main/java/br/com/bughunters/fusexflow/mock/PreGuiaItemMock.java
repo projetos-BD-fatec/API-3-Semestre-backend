@@ -6,6 +6,7 @@ import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class PreGuiaItemMock {
     private static final List<PreGuiaItem> preGuiaItens = new ArrayList<>();
@@ -43,5 +44,20 @@ public class PreGuiaItemMock {
                         item.getPreGuia().getIdPreGuia().equals(preGuiaId)
                 )
                 .toList();
+    }
+
+    public static PreGuiaItem save(PreGuiaItem preGuiaItem) {
+
+        Long maiorId = preGuiaItens.stream()
+                .map(PreGuiaItem::getIdPreGuiaItem)
+                .filter(Objects::nonNull)
+                .max(Long::compareTo)
+                .orElse(0L);
+
+        preGuiaItem.setIdPreGuiaItem(maiorId + 1);
+
+        preGuiaItens.add(preGuiaItem);
+
+        return preGuiaItem;
     }
 }

@@ -43,6 +43,10 @@ public class PreGuiaItem {
         this.status = StatusPreGuia.EM_ANALISE;
     }
 
+    public void setIdPreGuiaItem(Long idPreGuiaItem) {
+        this.idPreGuiaItem = idPreGuiaItem;
+    }
+
     public Long getIdPreGuiaItem() {
         return idPreGuiaItem;
     }

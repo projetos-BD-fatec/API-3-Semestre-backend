@@ -1,6 +1,6 @@
 package br.com.bughunters.fusexflow.service;
 
-import br.com.bughunters.fusexflow.dto.ExameResponse;
+import br.com.bughunters.fusexflow.dto.response.ExameResponse;
 import br.com.bughunters.fusexflow.entity.Exame;
 import br.com.bughunters.fusexflow.mock.ExameMock;
 import org.springframework.stereotype.Service;

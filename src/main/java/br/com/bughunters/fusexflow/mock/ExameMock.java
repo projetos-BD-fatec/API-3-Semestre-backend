@@ -2,6 +2,7 @@ package br.com.bughunters.fusexflow.mock;
 
 import br.com.bughunters.fusexflow.entity.CatalogoTuss;
 import br.com.bughunters.fusexflow.entity.Exame;
+import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -55,5 +56,12 @@ public class ExameMock {
 
     public static List<Exame> getExames() {
         return exames;
+    }
+
+    public static Exame findById(Long exameId) {
+        return exames.stream()
+                .filter(item ->
+                        item.getIdExame().equals(exameId)
+                ).findFirst().orElse(null);
     }
 }
