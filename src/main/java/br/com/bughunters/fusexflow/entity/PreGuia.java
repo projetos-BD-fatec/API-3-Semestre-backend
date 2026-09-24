@@ -30,14 +30,21 @@ public class PreGuia {
     protected PreGuia() {
     }
 
-    public PreGuia(
-            Usuario usuario,
-            String nmAnexo
-    ) {
+    public PreGuia(Usuario usuario, String nmAnexo) {
         this.usuario = usuario;
         this.nmAnexo = nmAnexo;
         this.status = StatusPreGuia.EM_ANALISE;
         this.criadoEm = LocalDateTime.now();
+    }
+
+    public PreGuia(Usuario usuario) {
+        this.usuario = usuario;
+        this.status = StatusPreGuia.EM_ANALISE;
+        this.criadoEm = LocalDateTime.now();
+    }
+
+    public void setNmAnexo(String nmAnexo) {
+        this.nmAnexo = nmAnexo;
     }
 
     public void setStatus(StatusPreGuia status) {
@@ -50,10 +57,6 @@ public class PreGuia {
 
     public Long getIdPreGuia() {
         return idPreGuia;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
     }
 
     public String getNmAnexo() {

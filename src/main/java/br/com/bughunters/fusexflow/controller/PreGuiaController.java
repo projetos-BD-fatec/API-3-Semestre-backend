@@ -14,21 +14,35 @@ import java.util.List;
 @RestController
 @RequestMapping("/pre-guias")
 public class PreGuiaController {
+
     private final PreGuiaService preGuiaService;
 
     public PreGuiaController(PreGuiaService preGuiaService) {
         this.preGuiaService = preGuiaService;
     }
 
+    /**
+     * Uso futuro: painel do funcionário FUSEX (todas as solicitações).
+     * Ainda sem controle de acesso — não expor no frontend do usuário comum.
+     */
     @GetMapping
     public List<PreGuiaResponse> findAll() {
         return preGuiaService.findAll();
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<PreGuiaResponse> criar(@RequestPart("encaminhamento") MultipartFile arquivo, @RequestPart("dados")PreGuiaRequest request) {
-        PreGuiaResponse response = preGuiaService.criar(request, arquivo);
+    /**
+     * Uso atual: tela do usuário, mostrando apenas as pré-guias dele.
+     * ID fixo (1L) temporário até existir autenticação real.
+     */
+    @GetMapping("/me")
+    public List<PreGuiaResponse> findMinhas() {
+        return preGuiaService.findByUsuarioId(1L);
+    }
 
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PreGuiaResponse> criar(@RequestPart("encaminhamento") MultipartFile arquivo,
+                                                 @RequestPart("dados") PreGuiaRequest request) {
+        PreGuiaResponse response = preGuiaService.criar(request, arquivo);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

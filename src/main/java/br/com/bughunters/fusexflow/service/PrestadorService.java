@@ -15,8 +15,7 @@ public class PrestadorService {
     private final PrestadorRepository prestadorRepository;
     private final ExamePrestadorRepository examePrestadorRepository;
 
-    public PrestadorService(PrestadorRepository prestadorRepository,
-                            ExamePrestadorRepository examePrestadorRepository) {
+    public PrestadorService(PrestadorRepository prestadorRepository, ExamePrestadorRepository examePrestadorRepository) {
         this.prestadorRepository = prestadorRepository;
         this.examePrestadorRepository = examePrestadorRepository;
     }
