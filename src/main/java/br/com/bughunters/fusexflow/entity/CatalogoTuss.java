@@ -14,9 +14,6 @@ public class CatalogoTuss {
     @Column(name = "DESC_TUSS", length = 250, nullable = false)
     private String descTuss;
 
-    @Column(name = "CATEGORIA", length = 200)
-    private String categoria;
-
     @Column(name = "TABELA_TUSS", length = 50)
     private String tabelaTuss;
 
@@ -32,14 +29,12 @@ public class CatalogoTuss {
     public CatalogoTuss(
             String codTuss,
             String descTuss,
-            String categoria,
             String tabelaTuss,
             LocalDate inicioVigencia,
             LocalDate fimVigencia
     ) {
         this.codTuss = codTuss;
         this.descTuss = descTuss;
-        this.categoria = categoria;
         this.tabelaTuss = tabelaTuss;
         this.inicioVigencia = inicioVigencia;
         this.fimVigencia = fimVigencia;

@@ -1,7 +1,7 @@
-package br.com.bughunters.fusexflow.usuario.controller;
+package br.com.bughunters.fusexflow.controller;
 
-import br.com.bughunters.fusexflow.usuario.dto.UsuarioCadastroDTO;
-import br.com.bughunters.fusexflow.usuario.service.UsuarioService;
+import br.com.bughunters.fusexflow.dto.request.UsuarioRequest;
+import br.com.bughunters.fusexflow.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    private final UsuarioService service;
+    private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService service) {
-        this.service = service;
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
     @PostMapping
-    public ResponseEntity<String> cadastrar(
-            @Valid @RequestBody UsuarioCadastroDTO dto) {
+    public ResponseEntity<String> cadastrar(@Valid @RequestBody UsuarioRequest request) {
 
-        service.cadastrar(dto);
+        usuarioService.cadastrar(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
