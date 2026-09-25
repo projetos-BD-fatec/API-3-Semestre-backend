@@ -28,6 +28,9 @@ public class Usuario {
     @Column(name = "DS_SENHA_HASH", length = 200, nullable = false)
     private String dsSenhaHash;
 
+    @Column(name = "NR_PRECCP", length = 15)
+    private String nrPrecCp;
+
     @Column(name = "NR_CPF", length = 11)
     private String nrCpf;
 
@@ -53,17 +56,40 @@ public class Usuario {
             String nmUsuario,
             String dsEmail,
             String dsSenhaHash,
+            String nrPrecCp,
             String nrCpf,
             String nrTelefone
     ) {
         this.nmUsuario = nmUsuario;
         this.dsEmail = dsEmail;
         this.dsSenhaHash = dsSenhaHash;
+        this.nrPrecCp = nrPrecCp;
         this.nrCpf = nrCpf;
         this.nrTelefone = nrTelefone;
+        this.criadoEm = LocalDateTime.now();
     }
 
-    public void setIdUsuario(Long idUsuario) {
-        this.idUsuario = idUsuario;
+    public void setFlAtivo(String flAtivo) {
+        this.flAtivo = flAtivo;
+    }
+
+    public Long getIdUsuario() {
+        return idUsuario;
+    }
+
+    public String getDsEmail() {
+        return dsEmail;
+    }
+
+    public String getDsSenhaHash() {
+        return dsSenhaHash;
+    }
+
+    public String getFlAtivo() {
+        return flAtivo;
+    }
+
+    public String getNmUsuario() {
+        return nmUsuario;
     }
 }
