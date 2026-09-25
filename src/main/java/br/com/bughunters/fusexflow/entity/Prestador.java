@@ -80,8 +80,8 @@ public class Prestador {
         this.nrCep = nrCep;
     }
 
-    public void setIdPrestador(Long idPrestador) {
-        this.idPrestador = idPrestador;
+    public String getNomeExibicao() {
+        return nmFantasia != null ? nmFantasia : nmPrestador;
     }
 
     public Long getIdPrestador() {

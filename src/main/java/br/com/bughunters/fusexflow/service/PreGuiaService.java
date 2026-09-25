@@ -7,6 +7,7 @@ import br.com.bughunters.fusexflow.dto.response.PreGuiaResponse;
 import br.com.bughunters.fusexflow.entity.*;
 import br.com.bughunters.fusexflow.repositories.*;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,8 +56,12 @@ public class PreGuiaService {
     /**
      * Uso na tela do usuário: retorna apenas as pré-guias abertas por ele.
      */
-    public List<PreGuiaResponse> findByUsuarioId(Long idUsuario) {
-        return preGuiaRepository.findByUsuario_IdUsuario(idUsuario)
+    public List<PreGuiaResponse> findMinhas() {
+        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuario = usuarioRepository.findByDsEmail(loginAtual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
+
+        return preGuiaRepository.findByUsuario_IdUsuario(usuario.getIdUsuario())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -73,8 +78,10 @@ public class PreGuiaService {
             throw new IllegalArgumentException("A pré-guia deve possuir pelo menos um item.");
         }
 
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário padrão de teste não encontrado (ID 1)."));
+        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario usuario = usuarioRepository.findByDsEmail(loginAtual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
 
         PreGuia preGuia = new PreGuia(usuario);
         preGuia = preGuiaRepository.save(preGuia);
@@ -123,7 +130,7 @@ public class PreGuiaService {
                 .map(item -> new PreGuiaItemResponse(
                         item.getIdPreGuiaItem(),
                         item.getExame().getDescExame(),
-                        item.getPrestador().getNmFantasia(),
+                        item.getPrestador().getNomeExibicao(),
                         item.getPrestador().getDsLogradouro(),
                         item.getPrestador().getNrEndereco(),
                         item.getPrestador().getDsComplemento(),

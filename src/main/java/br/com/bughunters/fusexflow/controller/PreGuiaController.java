@@ -30,13 +30,9 @@ public class PreGuiaController {
         return preGuiaService.findAll();
     }
 
-    /**
-     * Uso atual: tela do usuário, mostrando apenas as pré-guias dele.
-     * ID fixo (1L) temporário até existir autenticação real.
-     */
     @GetMapping("/me")
     public List<PreGuiaResponse> findMinhas() {
-        return preGuiaService.findByUsuarioId(1L);
+        return preGuiaService.findMinhas();
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
