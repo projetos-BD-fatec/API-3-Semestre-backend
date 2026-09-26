@@ -44,7 +44,7 @@ public class GuiaOficialService {
                 .caminhoArquivo(destino.toString())
                 .dataUpload(LocalDateTime.now())
                 .solicitacaoId(solicitacaoId)
-                .status(StatusGuia.ATIVA)
+                .status(StatusGuia.APROVADO)
                 .build();
 
         return repository.save(guia);
@@ -55,7 +55,7 @@ public class GuiaOficialService {
         GuiaOficial guia = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Guia não encontrada."));
 
-        if (guia.getStatus() != StatusGuia.ATIVA) {
+        if (guia.getStatus() != StatusGuia.APROVADO) {
             throw new IllegalStateException("A guia não está ativa/pendente e não pode ser finalizada.");
         }
 

@@ -13,7 +13,11 @@ public class GuiaOficial {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_guia_oficial")
     private Long id;
+
+    @Column(name = "solicitacao_id", nullable = false)
+    private Long solicitacaoId;
 
     @Column(name = "nome_arquivo", nullable = false)
     private String nomeArquivo;
@@ -23,9 +27,6 @@ public class GuiaOficial {
 
     @Column(name = "data_upload", nullable = false)
     private LocalDateTime dataUpload;
-
-    @Column(name = "solicitacao_id")
-    private Long solicitacaoId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
