@@ -96,4 +96,8 @@ public class Usuario {
     public String getNrPrecCp() {
         return nrPrecCp;
     }
+
+    public Prestador getPrestador() {
+        return prestador;
+    }
 }

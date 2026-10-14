@@ -70,4 +70,8 @@ public class PreGuia {
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
 }
