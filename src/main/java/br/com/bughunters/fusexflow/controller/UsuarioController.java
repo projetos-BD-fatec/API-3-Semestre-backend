@@ -1,10 +1,12 @@
 package br.com.bughunters.fusexflow.controller;
 
 import br.com.bughunters.fusexflow.dto.request.UsuarioRequest;
+import br.com.bughunters.fusexflow.dto.response.BeneficiarioResponse;
 import br.com.bughunters.fusexflow.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,5 +30,14 @@ public class UsuarioController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body("Usuário cadastrado com sucesso.");
+    }
+
+    /**
+     * Dados do usuário autenticado (nome e PREC-CP).
+     * Exige token: NÃO pode estar liberado (permitAll) no SecurityConfig.
+     */
+    @GetMapping("/me")
+    public BeneficiarioResponse me() {
+        return usuarioService.buscarLogado();
     }
 }
