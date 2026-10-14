@@ -39,13 +39,14 @@ public class GuiaOficialService {
 
         file.transferTo(destino);
 
-        GuiaOficial guia = GuiaOficial.builder()
-                .nomeArquivo(file.getOriginalFilename())
-                .caminhoArquivo(destino.toString())
-                .dataUpload(LocalDateTime.now())
-                .solicitacaoId(solicitacaoId)
-                .status(StatusGuia.APROVADO)
-                .build();
+        GuiaOficial guia = new GuiaOficial(
+                null,
+                solicitacaoId,
+                file.getOriginalFilename(),
+                destino.toString(),
+                LocalDateTime.now(),
+                StatusGuia.ATIVA
+        );
 
         return repository.save(guia);
     }
@@ -55,11 +56,11 @@ public class GuiaOficialService {
         GuiaOficial guia = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Guia não encontrada."));
 
-        if (guia.getStatus() != StatusGuia.APROVADO) {
+        if (guia.getStatus() != StatusGuia.ATIVA) {
             throw new IllegalStateException("A guia não está ativa/pendente e não pode ser finalizada.");
         }
 
-        guia.setStatus(StatusGuia.FINALIZADA);
+        guia.setStatus(StatusGuia.UTILIZADA);
 
         return repository.save(guia);
     }

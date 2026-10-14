@@ -8,13 +8,13 @@ import java.time.LocalDate;
 public class CatalogoTuss {
 
     @Id
-    @Column(name = "COD_TUSS", length = 200)
+    @Column(name = "COD_TUSS", length = 200, nullable = false)
     private String codTuss;
 
     @Column(name = "DESC_TUSS", length = 250, nullable = false)
     private String descTuss;
 
-    @Column(name = "TABELA_TUSS", length = 50)
+    @Column(name = "TABELA_TUSS", length = 50, nullable = false)
     private String tabelaTuss;
 
     @Column(name = "INICIO_VIGENCIA")
@@ -42,5 +42,13 @@ public class CatalogoTuss {
 
     public String getCodTuss() {
         return codTuss;
+    }
+
+    public String getDescTuss() {
+        return descTuss;
+    }
+
+    public String getTabelaTuss() {
+        return tabelaTuss;
     }
 }
