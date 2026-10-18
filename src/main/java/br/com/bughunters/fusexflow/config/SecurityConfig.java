@@ -33,8 +33,8 @@ public class SecurityConfig {
                         // Login de usuário
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 
-                        // Login de OCS
-                        .requestMatchers(HttpMethod.POST, "/ocs/login").permitAll()
+                        // Login de Prestador
+                        .requestMatchers(HttpMethod.POST, "/prestador/login").permitAll()
 
                         // Demais rotas exigem autenticação
                         .anyRequest().authenticated()

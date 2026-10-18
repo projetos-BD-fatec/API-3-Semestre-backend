@@ -17,6 +17,9 @@ public class GuiaOficial {
     @Column(name = "solicitacao_id", nullable = false)
     private Long solicitacaoId;
 
+    @Column(name = "codigo_guia", length = 50, unique = true)
+    private String codigoGuia;
+
     @Column(name = "nome_arquivo", nullable = false)
     private String nomeArquivo;
 
@@ -38,6 +41,7 @@ public class GuiaOficial {
     public GuiaOficial(
             Long id,
             Long solicitacaoId,
+            String codigoGuia,
             String nomeArquivo,
             String caminhoArquivo,
             LocalDateTime dataUpload,
@@ -45,6 +49,7 @@ public class GuiaOficial {
 
         this.id = id;
         this.solicitacaoId = solicitacaoId;
+        this.codigoGuia = codigoGuia;
         this.nomeArquivo = nomeArquivo;
         this.caminhoArquivo = caminhoArquivo;
         this.dataUpload = dataUpload;
@@ -65,6 +70,14 @@ public class GuiaOficial {
 
     public void setSolicitacaoId(Long solicitacaoId) {
         this.solicitacaoId = solicitacaoId;
+    }
+
+    public String getCodigoGuia() {
+        return codigoGuia;
+    }
+
+    public void setCodigoGuia(String codigoGuia) {
+        this.codigoGuia = codigoGuia;
     }
 
     public String getNomeArquivo() {

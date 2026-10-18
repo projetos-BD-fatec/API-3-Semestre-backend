@@ -8,4 +8,9 @@ import java.util.List;
 public interface PreGuiaItemRepository extends JpaRepository<PreGuiaItem, Long> {
 
     List<PreGuiaItem> findByPreGuia_IdPreGuia(Long idPreGuia);
+
+    List<PreGuiaItem> findByPreGuia_IdPreGuiaAndPrestador_IdPrestador(
+            Long idPreGuia,
+            Long idPrestador
+    );
 }
