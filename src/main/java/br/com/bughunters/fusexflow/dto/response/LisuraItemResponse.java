@@ -2,6 +2,7 @@ package br.com.bughunters.fusexflow.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Um item do espelho na visão da Lisura: valor cobrado pela OCS
@@ -12,6 +13,9 @@ import java.time.LocalDate;
  *   ACIMA        -> cobrado > contratual (cobrança a maior)
  *   ABAIXO       -> cobrado < contratual
  *   SEM_CONTRATO -> não há valor contratual vigente para o procedimento
+ *
+ * decisao / valorFinal* / revisado*: preenchidos depois da revisão
+ * (PUT /lisura/{guiaId}/revisao); nulos enquanto o item não foi revisado.
  */
 public record LisuraItemResponse(
         Long idItem,
@@ -24,5 +28,10 @@ public record LisuraItemResponse(
         BigDecimal valorCobradoTotal,
         BigDecimal valorContratualTotal,
         BigDecimal diferenca,
-        String situacao
+        String situacao,
+        String decisao,
+        BigDecimal valorFinalUnitario,
+        BigDecimal valorFinalTotal,
+        String revisadoPor,
+        LocalDateTime revisadoEm
 ) {}

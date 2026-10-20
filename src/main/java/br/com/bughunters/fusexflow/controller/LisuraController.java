@@ -1,11 +1,9 @@
 package br.com.bughunters.fusexflow.controller;
 
+import br.com.bughunters.fusexflow.dto.request.LisuraRevisaoRequest;
 import br.com.bughunters.fusexflow.dto.response.LisuraEspelhoResponse;
 import br.com.bughunters.fusexflow.service.LisuraService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/lisura")
@@ -24,5 +22,15 @@ public class LisuraController {
     @GetMapping("/{guiaId}")
     public LisuraEspelhoResponse conferir(@PathVariable("guiaId") Long guiaId) {
         return lisuraService.conferir(guiaId);
+    }
+
+    /**
+     * Grava a decisão / valor corrigido pelo analista da Lisura.
+     * Corpo: { "itens": [ { "idItem": 1, "decisao": "VALOR_AJUSTADO", "valorAjustado": 12.50 } ] }
+     */
+    @PutMapping("/{guiaId}/revisao")
+    public LisuraEspelhoResponse revisar(@PathVariable("guiaId") Long guiaId,
+                                         @RequestBody LisuraRevisaoRequest request) {
+        return lisuraService.revisar(guiaId, request);
     }
 }

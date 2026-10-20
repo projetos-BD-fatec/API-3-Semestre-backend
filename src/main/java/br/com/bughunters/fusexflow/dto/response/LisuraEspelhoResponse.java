@@ -4,7 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** Espelho enviado pela OCS, comparado com os valores de contrato. */
+/**
+ * Espelho enviado pela OCS, comparado com os valores de contrato.
+ *
+ * totalFinal: soma do que será pago — valor revisado nos itens com revisão,
+ *             valor cobrado nos itens conformes. Itens pendentes não entram.
+ * itensPendentes: itens divergentes que ainda não foram revisados.
+ */
 public record LisuraEspelhoResponse(
         Long idEspelho,
         Long codigoGuia,
@@ -16,5 +22,7 @@ public record LisuraEspelhoResponse(
         BigDecimal totalCobrado,
         BigDecimal totalContratual,
         BigDecimal diferencaTotal,
-        long itensDivergentes
+        long itensDivergentes,
+        BigDecimal totalFinal,
+        long itensPendentes
 ) {}
