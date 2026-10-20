@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PRE_GUIA_ITEM")
@@ -33,6 +34,12 @@ public class PreGuiaItem {
     @Column(name = "STATUS", length = 20, nullable = false)
     private StatusPreGuia status;
 
+    @Column(name = "FL_REALIZADO", columnDefinition = "CHAR(1)", nullable = false)
+    private String flRealizado = "N";
+
+    @Column(name = "DT_REALIZADO")
+    private LocalDateTime dataRealizacao;
+
     protected PreGuiaItem() {
     }
 
@@ -42,6 +49,7 @@ public class PreGuiaItem {
         this.exame = exame;
         this.valor = valor;
         this.status = StatusPreGuia.EM_ANALISE;
+        this.flRealizado = "N";
     }
 
     public void setIdPreGuiaItem(Long idPreGuiaItem) {
@@ -70,5 +78,22 @@ public class PreGuiaItem {
 
     public StatusPreGuia getStatus() {
         return status;
+    }
+
+    public String getFlRealizado() {
+        return flRealizado;
+    }
+
+    public LocalDateTime getDataRealizacao() {
+        return dataRealizacao;
+    }
+
+    public boolean isRealizado() {
+        return "S".equalsIgnoreCase(flRealizado);
+    }
+
+    public void marcarComoRealizado() {
+        this.flRealizado = "S";
+        this.dataRealizacao = LocalDateTime.now();
     }
 }

@@ -13,4 +13,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByNrPrecCp(String nrPrecCp);
 
     Optional<Usuario> findByDsEmail(String dsEmail);
+
+    // Localiza a conta do prestador pelo CNPJ
+    Optional<Usuario> findByPrestador_NrDocumento(String nrDocumento);
 }

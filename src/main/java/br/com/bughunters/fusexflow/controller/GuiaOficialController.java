@@ -44,4 +44,74 @@ public class GuiaOficialController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
+
+    // Listar e pesquisar guias do prestador logado
+    @GetMapping
+    public ResponseEntity<?> listarGuias(
+            @RequestParam(required = false) String busca) {
+
+        try {
+            return ResponseEntity.ok(
+                    service.pesquisarGuias(busca)
+            );
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
+    }
+
+    // Visualizar detalhes de uma guia
+    @GetMapping("/{id}")
+    public ResponseEntity<?> buscarDetalhes(
+            @PathVariable Long id) {
+
+        try {
+            return ResponseEntity.ok(
+                    service.buscarDetalhes(id)
+            );
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
+    }
+
+
+    // Confirmar a realização de um procedimento específico
+    @PutMapping("/{idGuia}/procedimentos/{idItem}/finalizar")
+    public ResponseEntity<?> finalizarProcedimento(
+            @PathVariable Long idGuia,
+            @PathVariable Long idItem
+    ) {
+
+        try {
+            return ResponseEntity.ok(
+                    service.finalizarProcedimento(idGuia, idItem)
+            );
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        }
+    }
+
 }
