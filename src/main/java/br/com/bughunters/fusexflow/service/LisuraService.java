@@ -3,6 +3,7 @@ package br.com.bughunters.fusexflow.service;
 import br.com.bughunters.fusexflow.dto.request.LisuraRevisaoRequest;
 import br.com.bughunters.fusexflow.dto.response.LisuraEspelhoResponse;
 import br.com.bughunters.fusexflow.dto.response.LisuraItemResponse;
+import br.com.bughunters.fusexflow.dto.response.LisuraResumoResponse;
 import br.com.bughunters.fusexflow.entity.Espelho;
 import br.com.bughunters.fusexflow.entity.EspelhoItem;
 import br.com.bughunters.fusexflow.entity.ExamePrestador;
@@ -71,6 +72,30 @@ public class LisuraService {
         this.preGuiaRepository = preGuiaRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
         this.usuarioRepository = usuarioRepository;
+    }
+
+    // ---------- lista de espelhos enviados ----------
+
+    /** Espelhos já enviados pelas OCS, mais recentes primeiro, com o resumo da conferência. */
+    @Transactional(readOnly = true)
+    public List<LisuraResumoResponse> listar() {
+        validarPerfil();
+
+        return espelhoRepository.findByStatusOrderByEnviadoEmDesc(StatusEspelho.ENVIADO)
+                .stream()
+                .map(this::toResponse)
+                .map(c -> new LisuraResumoResponse(
+                        c.idGuia(),
+                        c.codigoGuia(),
+                        c.nomeBeneficiario(),
+                        c.nomePrestador(),
+                        c.enviadoEm(),
+                        c.itens().size(),
+                        c.totalCobrado(),
+                        c.itensDivergentes(),
+                        c.itensPendentes(),
+                        c.itensNaoConfirmados()))
+                .toList();
     }
 
     // ---------- cruzamento (SCRUM-49) ----------

@@ -2,8 +2,11 @@ package br.com.bughunters.fusexflow.controller;
 
 import br.com.bughunters.fusexflow.dto.request.LisuraRevisaoRequest;
 import br.com.bughunters.fusexflow.dto.response.LisuraEspelhoResponse;
+import br.com.bughunters.fusexflow.dto.response.LisuraResumoResponse;
 import br.com.bughunters.fusexflow.service.LisuraService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/lisura")
@@ -13,6 +16,12 @@ public class LisuraController {
 
     public LisuraController(LisuraService lisuraService) {
         this.lisuraService = lisuraService;
+    }
+
+    /** Lista os espelhos já enviados pelas OCS (entrada da Lisura para o FUSEX). */
+    @GetMapping
+    public List<LisuraResumoResponse> listar() {
+        return lisuraService.listar();
     }
 
     /**
