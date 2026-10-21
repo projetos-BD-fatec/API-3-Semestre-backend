@@ -8,6 +8,7 @@ import br.com.bughunters.fusexflow.entity.EspelhoItem;
 import br.com.bughunters.fusexflow.entity.ExamePrestador;
 import br.com.bughunters.fusexflow.entity.GuiaOficial;
 import br.com.bughunters.fusexflow.entity.LisuraRevisaoItem;
+import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.enums.DecisaoLisura;
 import br.com.bughunters.fusexflow.enums.StatusEspelho;
@@ -15,6 +16,7 @@ import br.com.bughunters.fusexflow.repositories.EspelhoItemRepository;
 import br.com.bughunters.fusexflow.repositories.EspelhoRepository;
 import br.com.bughunters.fusexflow.repositories.ExamePrestadorRepository;
 import br.com.bughunters.fusexflow.repositories.LisuraRevisaoItemRepository;
+import br.com.bughunters.fusexflow.repositories.PreGuiaItemRepository;
 import br.com.bughunters.fusexflow.repositories.PreGuiaRepository;
 import br.com.bughunters.fusexflow.repositories.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -43,11 +45,16 @@ public class LisuraService {
     public static final String ABAIXO = "ABAIXO";
     public static final String SEM_CONTRATO = "SEM_CONTRATO";
 
+    public static final String CONFIRMADO = "CONFIRMADO";
+    public static final String NAO_CONFIRMADO = "NAO_CONFIRMADO";
+    public static final String FORA_DA_GUIA = "FORA_DA_GUIA";
+
     private final EspelhoRepository espelhoRepository;
     private final EspelhoItemRepository espelhoItemRepository;
     private final ExamePrestadorRepository examePrestadorRepository;
     private final LisuraRevisaoItemRepository revisaoRepository;
     private final PreGuiaRepository preGuiaRepository;
+    private final PreGuiaItemRepository preGuiaItemRepository;
     private final UsuarioRepository usuarioRepository;
 
     public LisuraService(EspelhoRepository espelhoRepository,
@@ -55,12 +62,14 @@ public class LisuraService {
                          ExamePrestadorRepository examePrestadorRepository,
                          LisuraRevisaoItemRepository revisaoRepository,
                          PreGuiaRepository preGuiaRepository,
+                         PreGuiaItemRepository preGuiaItemRepository,
                          UsuarioRepository usuarioRepository) {
         this.espelhoRepository = espelhoRepository;
         this.espelhoItemRepository = espelhoItemRepository;
         this.examePrestadorRepository = examePrestadorRepository;
         this.revisaoRepository = revisaoRepository;
         this.preGuiaRepository = preGuiaRepository;
+        this.preGuiaItemRepository = preGuiaItemRepository;
         this.usuarioRepository = usuarioRepository;
     }
 
@@ -152,6 +161,17 @@ public class LisuraService {
 
     private LisuraEspelhoResponse toResponse(Espelho espelho) {
         Long idPrestador = espelho.getPrestador().getIdPrestador();
+        GuiaOficial guia = espelho.getGuiaOficial();
+
+        // Procedimentos da guia destinados a esta OCS, por código TUSS
+        // (a OCS confirma a realização de cada um no painel do prestador)
+        Map<String, PreGuiaItem> procedimentosDaGuia = preGuiaItemRepository
+                .findByPreGuia_IdPreGuiaAndPrestador_IdPrestador(guia.getSolicitacaoId(), idPrestador)
+                .stream()
+                .collect(Collectors.toMap(
+                        p -> p.getExame().getCatalogoTuss().getCodTuss(),
+                        Function.identity(),
+                        (a, b) -> a));
 
         Map<Long, LisuraRevisaoItem> revisoes = revisaoRepository
                 .findByEspelhoItem_Espelho_IdEspelho(espelho.getIdEspelho())
@@ -161,7 +181,9 @@ public class LisuraService {
         List<LisuraItemResponse> itens = espelhoItemRepository
                 .findByEspelho_IdEspelhoOrderByIdEspelhoItem(espelho.getIdEspelho())
                 .stream()
-                .map(item -> comparar(item, idPrestador, revisoes.get(item.getIdEspelhoItem())))
+                .map(item -> comparar(item, idPrestador,
+                        procedimentosDaGuia.get(item.getCatalogoTuss().getCodTuss()),
+                        revisoes.get(item.getIdEspelhoItem())))
                 .toList();
 
         BigDecimal totalCobrado = BigDecimal.ZERO;
@@ -170,6 +192,7 @@ public class LisuraService {
         BigDecimal totalFinal = BigDecimal.ZERO;
         long divergentes = 0;
         long pendentes = 0;
+        long naoConfirmados = 0;
 
         for (LisuraItemResponse i : itens) {
             totalCobrado = totalCobrado.add(i.valorCobradoTotal());
@@ -177,6 +200,10 @@ public class LisuraService {
             if (i.valorContratualTotal() != null) {
                 totalContratual = totalContratual.add(i.valorContratualTotal());
                 diferencaTotal = diferencaTotal.add(i.diferenca());
+            }
+
+            if (!CONFIRMADO.equals(i.procedimentoNaGuia())) {
+                naoConfirmados++;
             }
 
             boolean divergente = !CONFORME.equals(i.situacao());
@@ -193,7 +220,6 @@ public class LisuraService {
             }
         }
 
-        GuiaOficial guia = espelho.getGuiaOficial();
         String nomeBeneficiario = preGuiaRepository.findById(guia.getSolicitacaoId())
                 .map(p -> p.getUsuario().getNmUsuario())
                 .orElse(null);
@@ -201,6 +227,7 @@ public class LisuraService {
         return new LisuraEspelhoResponse(
                 espelho.getIdEspelho(),
                 guia.getId(),
+                guia.getCodigoGuia(),
                 nomeBeneficiario,
                 espelho.getPrestador().getNomeExibicao(),
                 espelho.getStatus().name(),
@@ -211,12 +238,17 @@ public class LisuraService {
                 diferencaTotal,
                 divergentes,
                 totalFinal,
-                pendentes
+                pendentes,
+                naoConfirmados
         );
     }
 
-    /** Monta a linha do item: cobrado x contratual (por unidade e total) + revisão, se houver. */
-    private LisuraItemResponse comparar(EspelhoItem item, Long idPrestador, LisuraRevisaoItem revisao) {
+    /**
+     * Monta a linha do item: cobrado x contratual (por unidade e total),
+     * se a OCS confirmou a realização na guia e a revisão, se houver.
+     */
+    private LisuraItemResponse comparar(EspelhoItem item, Long idPrestador,
+                                        PreGuiaItem procedimentoDaGuia, LisuraRevisaoItem revisao) {
         BigDecimal quantidade = BigDecimal.valueOf(item.getQuantidade());
         BigDecimal contratualUnit = valorContratual(item, idPrestador);
 
@@ -249,6 +281,9 @@ public class LisuraService {
                 contratualTotal,
                 diferenca,
                 situacao,
+                procedimentoDaGuia == null ? FORA_DA_GUIA
+                        : procedimentoDaGuia.isRealizado() ? CONFIRMADO : NAO_CONFIRMADO,
+                procedimentoDaGuia == null ? null : procedimentoDaGuia.getDataRealizacao(),
                 revisao == null ? null : revisao.getDecisao().name(),
                 revisao == null ? null : revisao.getValorFinalUnitario(),
                 revisao == null ? null : revisao.getValorFinalUnitario().multiply(quantidade),

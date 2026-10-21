@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
  *   ABAIXO       -> cobrado < contratual
  *   SEM_CONTRATO -> não há valor contratual vigente para o procedimento
  *
+ * procedimentoNaGuia (confirmação feita pela OCS no painel do prestador):
+ *   CONFIRMADO     -> procedimento da guia marcado como realizado
+ *   NAO_CONFIRMADO -> está na guia, mas a OCS não confirmou a realização
+ *   FORA_DA_GUIA   -> cobrado no espelho, mas não consta na guia
+ *
  * decisao / valorFinal* / revisado*: preenchidos depois da revisão
  * (PUT /lisura/{guiaId}/revisao); nulos enquanto o item não foi revisado.
  */
@@ -29,6 +34,8 @@ public record LisuraItemResponse(
         BigDecimal valorContratualTotal,
         BigDecimal diferenca,
         String situacao,
+        String procedimentoNaGuia,
+        LocalDateTime realizadoEm,
         String decisao,
         BigDecimal valorFinalUnitario,
         BigDecimal valorFinalTotal,
