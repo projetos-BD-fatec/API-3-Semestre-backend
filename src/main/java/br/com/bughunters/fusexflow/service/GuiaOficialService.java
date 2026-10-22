@@ -20,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -297,8 +299,8 @@ public class GuiaOficialService {
                         );
 
         if (itens.isEmpty()) {
-
-            throw new IllegalStateException(
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
                     "Esta guia não pertence ao prestador autenticado."
             );
         }
@@ -346,6 +348,69 @@ public class GuiaOficialService {
                 procedimentos
         );
     }
+
+
+/* =====================================================
+   RECUPERAR ARQUIVO OFICIAL DA GUIA
+===================================================== */
+
+    @Transactional(readOnly = true)
+    public Resource buscarArquivoGuia(Long idGuia) {
+
+        // Primeiro valida se o prestador pode acessar a guia.
+        buscarDetalhes(idGuia);
+
+        // Recupera o registro da guia oficial.
+        GuiaOficial guia = repository.findById(idGuia)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Guia oficial não encontrada."
+                        )
+                );
+
+        try {
+
+            // Recupera o caminho salvo durante o upload.
+            Path caminho = Paths.get(guia.getCaminhoArquivo())
+                    .toAbsolutePath()
+                    .normalize();
+
+            // Confirma que o arquivo está dentro do diretório de uploads.
+            Path diretorioPermitido = Paths.get(uploadDir)
+                    .toAbsolutePath()
+                    .normalize();
+
+            if (!caminho.startsWith(diretorioPermitido)) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Caminho de arquivo não permitido."
+                );
+            }
+
+            if (!Files.isRegularFile(caminho) ||
+                    !Files.isReadable(caminho)) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Arquivo da guia não encontrado no servidor."
+                );
+            }
+
+            return new UrlResource(caminho.toUri());
+
+        } catch (ResponseStatusException erro) {
+            throw erro;
+
+        } catch (Exception erro) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro ao recuperar o arquivo da guia.",
+                    erro
+            );
+        }
+    }
+
 
     private Prestador prestadorLogado() {
 

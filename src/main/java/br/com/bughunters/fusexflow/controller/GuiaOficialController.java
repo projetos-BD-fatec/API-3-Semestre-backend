@@ -5,6 +5,7 @@ import br.com.bughunters.fusexflow.service.GuiaOficialService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -88,6 +89,30 @@ public class GuiaOficialController {
                     .body(e.getMessage());
         }
     }
+
+/* =====================================================
+   VISUALIZAR ARQUIVO OFICIAL DA GUIA
+   GET /api/guias/{id}/arquivo
+===================================================== */
+
+    @GetMapping("/{id}/arquivo")
+    public ResponseEntity<Resource> visualizarArquivo(
+            @PathVariable Long id
+    ) {
+
+        // O Service valida o prestador autenticado
+        // antes de recuperar o documento.
+        Resource arquivo = service.buscarArquivoGuia(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"guia-oficial.pdf\""
+                )
+                .body(arquivo);
+    }
+
 
 
     // Confirmar a realização de um procedimento específico

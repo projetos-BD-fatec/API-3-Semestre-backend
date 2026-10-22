@@ -56,27 +56,57 @@ public class EspelhoService {
                 .toList();
     }
 
-    /** Abre o espelho da guia. Se já existe, devolve o existente (1:1). */
+
+    /**
+     * Abre o espelho da guia.
+     * Se já existir, retorna o mesmo espelho (1:1).
+     */
     @Transactional
     public EspelhoResponse abrir(Long idGuiaOficial) {
         Prestador prestador = prestadorLogado();
 
         GuiaOficial guia = guiaOficialRepository.findById(idGuiaOficial)
-                .orElseThrow(() -> new EntityNotFoundException("Guia não encontrada: " + idGuiaOficial));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Guia não encontrada: " + idGuiaOficial
+                ));
 
+        // Verifica se a guia pertence ao prestador autenticado
         validarGuiaDoPrestador(guia, prestador);
 
-        Espelho espelho = espelhoRepository.findByGuiaOficial_Id(idGuiaOficial).orElse(null);
+        // Busca um espelho existente
+        Espelho espelho = espelhoRepository
+                .findByGuiaOficial_Id(idGuiaOficial)
+                .orElse(null);
 
-        if (espelho == null) {
-            if (guia.getStatus() != StatusGuia.UTILIZADA) {
-                throw new IllegalStateException("O espelho só pode ser aberto para guias utilizadas.");
+        if (espelho != null) {
+
+            // Confirma que o espelho pertence à mesma OCS
+            if (!espelho.getPrestador().getIdPrestador()
+                    .equals(prestador.getIdPrestador())) {
+
+                throw new EntityNotFoundException(
+                        "Espelho não encontrado para este prestador."
+                );
             }
-            espelho = espelhoRepository.save(new Espelho(guia, prestador));
+
+            return toResponse(espelho);
         }
+
+        // Um novo espelho só pode ser criado para guia UTILIZADA
+        if (guia.getStatus() != StatusGuia.UTILIZADA) {
+            throw new IllegalStateException(
+                    "O espelho só pode ser aberto para guias utilizadas."
+            );
+        }
+
+        // Cria somente quando ainda não existe
+        espelho = espelhoRepository.save(
+                new Espelho(guia, prestador)
+        );
 
         return toResponse(espelho);
     }
+
 
     @Transactional(readOnly = true)
     public EspelhoResponse buscar(Long idEspelho) {
