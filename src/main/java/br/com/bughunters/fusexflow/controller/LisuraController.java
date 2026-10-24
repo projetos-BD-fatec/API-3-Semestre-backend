@@ -1,12 +1,17 @@
 package br.com.bughunters.fusexflow.controller;
 
+import br.com.bughunters.fusexflow.dto.request.LisuraDecisaoRequest;
 import br.com.bughunters.fusexflow.dto.request.LisuraRevisaoRequest;
 import br.com.bughunters.fusexflow.dto.response.LisuraEspelhoResponse;
 import br.com.bughunters.fusexflow.dto.response.LisuraResumoResponse;
 import br.com.bughunters.fusexflow.service.LisuraService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/lisura")
@@ -18,7 +23,7 @@ public class LisuraController {
         this.lisuraService = lisuraService;
     }
 
-    /** Lista os espelhos já enviados pelas OCS (entrada da Lisura para o FUSEX). */
+    /** Fila da Lisura: espelhos enviados pelas OCS que ainda aguardam a decisão. */
     @GetMapping
     public List<LisuraResumoResponse> listar() {
         return lisuraService.listar();
@@ -41,5 +46,33 @@ public class LisuraController {
     public LisuraEspelhoResponse revisar(@PathVariable("guiaId") Long guiaId,
                                          @RequestBody LisuraRevisaoRequest request) {
         return lisuraService.revisar(guiaId, request);
+    }
+
+    /**
+     * Decisão final do analista: muda o status da guia para
+     * LISURA_APROVADA (aprovada para pagamento) ou LISURA_RECUSADA.
+     * Corpo: { "decisao": "APROVAR" } ou { "decisao": "RECUSAR" }
+     */
+    @PatchMapping("/{guiaId}/decisao")
+    public LisuraEspelhoResponse decidir(@PathVariable("guiaId") Long guiaId,
+                                         @RequestBody LisuraDecisaoRequest request) {
+        return lisuraService.decidir(guiaId, request);
+    }
+
+    // Erros de regra voltam com { "message": "..." }, que o frontend mostra ao analista
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleRequisicaoInvalida(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleConflito(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNaoEncontrado(EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
     }
 }

@@ -1,5 +1,6 @@
 package br.com.bughunters.fusexflow.service;
 
+import br.com.bughunters.fusexflow.dto.request.LisuraDecisaoRequest;
 import br.com.bughunters.fusexflow.dto.request.LisuraRevisaoRequest;
 import br.com.bughunters.fusexflow.dto.response.LisuraEspelhoResponse;
 import br.com.bughunters.fusexflow.dto.response.LisuraItemResponse;
@@ -13,6 +14,7 @@ import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.enums.DecisaoLisura;
 import br.com.bughunters.fusexflow.enums.StatusEspelho;
+import br.com.bughunters.fusexflow.enums.StatusGuia;
 import br.com.bughunters.fusexflow.repositories.EspelhoItemRepository;
 import br.com.bughunters.fusexflow.repositories.EspelhoRepository;
 import br.com.bughunters.fusexflow.repositories.ExamePrestadorRepository;
@@ -76,13 +78,17 @@ public class LisuraService {
 
     // ---------- lista de espelhos enviados ----------
 
-    /** Espelhos já enviados pelas OCS, mais recentes primeiro, com o resumo da conferência. */
+    /**
+     * Fila da Lisura: espelhos já enviados pelas OCS cuja guia ainda não foi
+     * aprovada nem recusada, mais recentes primeiro, com o resumo da conferência.
+     */
     @Transactional(readOnly = true)
     public List<LisuraResumoResponse> listar() {
         validarPerfil();
 
         return espelhoRepository.findByStatusOrderByEnviadoEmDesc(StatusEspelho.ENVIADO)
                 .stream()
+                .filter(e -> !e.getGuiaOficial().getStatus().decididaPelaLisura())
                 .map(this::toResponse)
                 .map(c -> new LisuraResumoResponse(
                         c.idGuia(),
@@ -121,6 +127,8 @@ public class LisuraService {
         }
 
         Espelho espelho = espelhoEnviadoDaGuia(idGuia);
+        validarAguardandoDecisao(espelho.getGuiaOficial());
+
         Long idPrestador = espelho.getPrestador().getIdPrestador();
         Usuario analista = usuarioLogado();
 
@@ -145,6 +153,54 @@ public class LisuraService {
         }
 
         return toResponse(espelho);
+    }
+
+    // ---------- decisão final (SCRUM-53) ----------
+
+    /**
+     * Aprova ou recusa a Lisura da guia.
+     * APROVAR exige todos os itens divergentes revisados; RECUSAR pode ser feito a qualquer momento.
+     * Depois da decisão a guia sai da fila e não aceita mais revisão.
+     */
+    @Transactional
+    public LisuraEspelhoResponse decidir(Long idGuia, LisuraDecisaoRequest request) {
+        validarPerfil();
+
+        if (request == null || request.decisao() == null || request.decisao().isBlank()) {
+            throw new IllegalArgumentException("Informe a decisão: APROVAR ou RECUSAR.");
+        }
+
+        Espelho espelho = espelhoEnviadoDaGuia(idGuia);
+        GuiaOficial guia = espelho.getGuiaOficial();
+        validarAguardandoDecisao(guia);
+
+        StatusGuia novoStatus = switch (request.decisao().trim().toUpperCase()) {
+            case "APROVAR" -> StatusGuia.LISURA_APROVADA;
+            case "RECUSAR" -> StatusGuia.LISURA_RECUSADA;
+            default -> throw new IllegalArgumentException(
+                    "Decisão inválida: " + request.decisao() + ". Use APROVAR ou RECUSAR.");
+        };
+
+        if (novoStatus == StatusGuia.LISURA_APROVADA) {
+            long pendentes = toResponse(espelho).itensPendentes();
+            if (pendentes > 0) {
+                throw new IllegalStateException(
+                        "Revise os " + pendentes + " item(ns) divergente(s) antes de confirmar a Lisura.");
+            }
+        }
+
+        guia.setStatus(novoStatus);
+
+        return toResponse(espelho);
+    }
+
+    private void validarAguardandoDecisao(GuiaOficial guia) {
+        if (guia.getStatus().decididaPelaLisura()) {
+            throw new IllegalStateException(
+                    guia.getStatus() == StatusGuia.LISURA_APROVADA
+                            ? "A Lisura desta guia já foi aprovada."
+                            : "A Lisura desta guia já foi recusada.");
+        }
     }
 
     private DecisaoLisura lerDecisao(String decisao) {
@@ -264,7 +320,8 @@ public class LisuraService {
                 divergentes,
                 totalFinal,
                 pendentes,
-                naoConfirmados
+                naoConfirmados,
+                guia.getStatus().name()
         );
     }
 
