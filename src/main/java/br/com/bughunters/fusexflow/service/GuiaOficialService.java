@@ -341,7 +341,7 @@ public class GuiaOficialService {
                 guia.getCodigoGuia(),
                 preGuia.getUsuario().getNmUsuario(),
                 guia.getStatus().name(),
-                guia.getStatus() == StatusGuia.UTILIZADA,
+                guia.getStatus().foiUtilizada(),
                 guia.getDataUpload(),
                 procedimentosRealizados,
                 itens.size(),

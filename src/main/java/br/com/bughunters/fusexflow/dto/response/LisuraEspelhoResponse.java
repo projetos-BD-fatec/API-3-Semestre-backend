@@ -12,6 +12,8 @@ import java.util.List;
  * itensPendentes: itens divergentes que ainda não foram revisados.
  * itensNaoConfirmados: itens cobrados que a OCS não confirmou como realizados
  *                      na guia (NAO_CONFIRMADO) ou que nem estão na guia (FORA_DA_GUIA).
+ * statusGuia: UTILIZADA enquanto aguarda a Lisura; LISURA_APROVADA ou
+ *             LISURA_RECUSADA depois da decisão final do analista.
  */
 public record LisuraEspelhoResponse(
         Long idEspelho,
@@ -28,5 +30,6 @@ public record LisuraEspelhoResponse(
         long itensDivergentes,
         BigDecimal totalFinal,
         long itensPendentes,
-        long itensNaoConfirmados
+        long itensNaoConfirmados,
+        String statusGuia
 ) {}
