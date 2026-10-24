@@ -36,4 +36,24 @@ public interface ExamePrestadorRepository extends JpaRepository<ExamePrestador, 
             @Param("idExame") Long idExame,
             @Param("hoje") LocalDate hoje
     );
+
+    /**
+     * Contrato do prestador para um código TUSS, vigente na data informada
+     * (usado pela Lisura com a data de realização do item do espelho).
+     * Mais recente primeiro, caso haja mais de um.
+     */
+    @Query("""
+            SELECT ep FROM ExamePrestador ep
+            WHERE ep.exame.catalogoTuss.codTuss = :codTuss
+              AND ep.prestador.idPrestador = :idPrestador
+              AND ep.status = 'ATIVO'
+              AND ep.inicioVigencia <= :data
+              AND (ep.fimVigencia IS NULL OR ep.fimVigencia >= :data)
+            ORDER BY ep.inicioVigencia DESC
+            """)
+    List<ExamePrestador> findVigentesByCodTussAndPrestador(
+            @Param("codTuss") String codTuss,
+            @Param("idPrestador") Long idPrestador,
+            @Param("data") LocalDate data
+    );
 }

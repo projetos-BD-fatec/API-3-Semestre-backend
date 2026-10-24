@@ -92,4 +92,12 @@ public class Usuario {
     public String getNmUsuario() {
         return nmUsuario;
     }
+
+    public String getNrPrecCp() {
+        return nrPrecCp;
+    }
+
+    public Prestador getPrestador() {
+        return prestador;
+    }
 }

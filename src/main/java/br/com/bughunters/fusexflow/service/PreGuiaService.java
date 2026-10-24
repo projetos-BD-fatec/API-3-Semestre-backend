@@ -57,9 +57,7 @@ public class PreGuiaService {
      * Uso na tela do usuário: retorna apenas as pré-guias abertas por ele.
      */
     public List<PreGuiaResponse> findMinhas() {
-        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario usuario = usuarioRepository.findByDsEmail(loginAtual)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
+        Usuario usuario = usuarioLogado();
 
         return preGuiaRepository.findByUsuario_IdUsuario(usuario.getIdUsuario())
                 .stream()
@@ -78,10 +76,7 @@ public class PreGuiaService {
             throw new IllegalArgumentException("A pré-guia deve possuir pelo menos um item.");
         }
 
-        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        Usuario usuario = usuarioRepository.findByDsEmail(loginAtual)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
+        Usuario usuario = usuarioLogado();
 
         PreGuia preGuia = new PreGuia(usuario);
         preGuia = preGuiaRepository.save(preGuia);
@@ -120,6 +115,33 @@ public class PreGuiaService {
         return toResponse(preGuia, itens);
     }
 
+    public ArquivoDownload buscarArquivo(Long idPreGuia) {
+        Usuario usuario = usuarioLogado();
+
+        PreGuia preGuia = preGuiaRepository
+                .findByIdPreGuiaAndUsuario_IdUsuario(idPreGuia, usuario.getIdUsuario())
+                .orElseThrow(() -> new EntityNotFoundException("Pré-guia não encontrada: " + idPreGuia));
+
+        String nomeArquivo = preGuia.getNmAnexo();
+
+        if (nomeArquivo == null || nomeArquivo.isBlank()) {
+            throw new EntityNotFoundException("A pré-guia não possui arquivo anexado.");
+        }
+
+        return new ArquivoDownload(
+                arquivoService.carregar(nomeArquivo),
+                arquivoService.tipoDoArquivo(nomeArquivo),
+                nomeArquivo
+        );
+    }
+
+    private Usuario usuarioLogado() {
+        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return usuarioRepository.findByDsEmail(loginAtual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
+    }
+
     private PreGuiaResponse toResponse(PreGuia preGuia) {
         List<PreGuiaItem> itens = preGuiaItemRepository.findByPreGuia_IdPreGuia(preGuia.getIdPreGuia());
         return toResponse(preGuia, itens);
@@ -129,6 +151,7 @@ public class PreGuiaService {
         List<PreGuiaItemResponse> itensResponse = itens.stream()
                 .map(item -> new PreGuiaItemResponse(
                         item.getIdPreGuiaItem(),
+                        item.getExame().getCatalogoTuss().getCodTuss(),
                         item.getExame().getDescExame(),
                         item.getPrestador().getNomeExibicao(),
                         item.getPrestador().getDsLogradouro(),

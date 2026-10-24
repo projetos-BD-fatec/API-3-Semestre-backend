@@ -1,3 +1,4 @@
+
 package br.com.bughunters.fusexflow.config;
 
 import org.springframework.context.annotation.Bean;
@@ -16,20 +17,29 @@ public class CorsConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Origens permitidas para o frontend local
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5500",
-                "http://127.0.0.1:5500"
+                "http://127.0.0.1:5500",
+                "http://localhost:5501",
+                "http://127.0.0.1:5501"
         ));
 
+        // Métodos HTTP permitidos
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
                 "PUT",
+                "PATCH",
                 "DELETE",
                 "OPTIONS"
         ));
 
+        // Cabeçalhos permitidos
         configuration.setAllowedHeaders(List.of("*"));
+
+        // Cache da verificação CORS por 1 hora
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

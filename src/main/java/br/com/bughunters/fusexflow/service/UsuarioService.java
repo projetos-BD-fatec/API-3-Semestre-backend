@@ -1,8 +1,11 @@
 package br.com.bughunters.fusexflow.service;
 
-import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.dto.request.UsuarioRequest;
+import br.com.bughunters.fusexflow.dto.response.BeneficiarioResponse;
+import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.repositories.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,5 +54,21 @@ public class UsuarioService {
         usuario.setFlAtivo("S");
 
         return repository.save(usuario);
+    }
+
+    /**
+     * Dados do usuário autenticado (o login do token é o e-mail,
+     * mesmo critério usado em PreGuiaService e AuthService).
+     */
+    public BeneficiarioResponse buscarLogado() {
+        String loginAtual = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario usuario = repository.findByDsEmail(loginAtual)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado: " + loginAtual));
+
+        return new BeneficiarioResponse(
+                usuario.getNmUsuario(),
+                usuario.getNrPrecCp()
+        );
     }
 }

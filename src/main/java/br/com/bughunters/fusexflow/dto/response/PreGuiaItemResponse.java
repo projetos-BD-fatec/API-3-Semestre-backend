@@ -3,6 +3,7 @@ package br.com.bughunters.fusexflow.dto.response;
 import java.math.BigDecimal;
 
 public record PreGuiaItemResponse(Long idPreGuiaItem,
+                                  String codTuss,
                                   String nmExame,
                                   String nmPrestador,
                                   String dsLogradouro,

@@ -1,13 +1,13 @@
+
 package br.com.bughunters.fusexflow.config;
 
 import br.com.bughunters.fusexflow.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.List;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -25,10 +25,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // ainda liberado — trocar quando o frontend enviar token
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
+                        // Cadastro de usuário
+                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
+
+                        // Login de usuário
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+
+                        // Login de Prestador
+                        .requestMatchers(HttpMethod.POST, "/prestador/login").permitAll()
+
+                        // Demais rotas exigem autenticação
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
         return http.build();
     }
 }
