@@ -77,12 +77,6 @@ public class EspelhoController {
         return espelhoService.salvar(id);
     }
 
-    /** Envio individual de um espelho já salvo (o envio em lote é /espelhos/enviar-lote). */
-    @PostMapping("/espelhos/{id}/enviar")
-    public EspelhoResponse enviar(@PathVariable("id") Long id) {
-        return espelhoService.enviar(id);
-    }
-
     // Erros de regra voltam com { "message": "..." }, que o frontend mostra à OCS
 
     @ExceptionHandler(IllegalArgumentException.class)
