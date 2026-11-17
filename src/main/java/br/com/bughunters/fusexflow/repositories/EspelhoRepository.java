@@ -11,4 +11,7 @@ public interface EspelhoRepository extends JpaRepository<Espelho, Long> {
 
     /** Espelhos de um status, mais recentes primeiro (usado na lista da Lisura). */
     List<Espelho> findByStatusOrderByEnviadoEmDesc(StatusEspelho status);
+
+    /** Espelhos salvos da OCS (ainda não enviados), mais recentes primeiro. */
+    List<Espelho> findByPrestador_IdPrestadorAndStatusOrderBySalvoEmDesc(Long idPrestador, StatusEspelho status);
 }
