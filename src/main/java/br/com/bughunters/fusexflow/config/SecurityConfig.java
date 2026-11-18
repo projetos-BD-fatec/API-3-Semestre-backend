@@ -35,7 +35,24 @@ public class SecurityConfig {
                         // Login de Prestador
                         .requestMatchers(HttpMethod.POST, "/prestador/login").permitAll()
 
-                        // Demais rotas exigem autenticação
+
+                        // Consultas gerais e encaminhamentos do colaborador
+                        .requestMatchers(HttpMethod.GET,
+                                "/pre-guias",
+                                        "/pre-guias/fusex",
+                                        "/pre-guias/fusex/**"
+                                )
+                                .hasAnyRole("FUSEX", "ADMIN")
+
+                        // Somente colaboradores autorizados podem decidir
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/pre-guias/fusex/*/decisao"
+                        )
+                        .hasAnyRole("FUSEX", "ADMIN")
+
+
+                                // Demais rotas exigem autenticação
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

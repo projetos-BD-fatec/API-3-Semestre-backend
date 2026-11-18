@@ -70,4 +70,49 @@ public class PreGuiaController {
                 .cacheControl(CacheControl.noStore())
                 .body(arquivo.recurso());
     }
+
+    // Todas as solicitações para o colaborador FUSEx
+    @GetMapping("/fusex")
+    public List<PreGuiaService.PreGuiaPainelResponse>
+    listarPainelFuncionario() {
+
+        return preGuiaService.listarParaColaborador();
+    }
+
+
+    @GetMapping("/fusex/{id}/arquivo")
+    public ResponseEntity<Resource> arquivoParaColaborador(
+            @PathVariable("id") Long id
+    ) {
+        ArquivoDownload arquivo =
+                preGuiaService.buscarArquivoParaColaborador(id);
+
+        boolean exibivel =
+                !MediaType.APPLICATION_OCTET_STREAM.equals(
+                        arquivo.tipo()
+                );
+
+        ContentDisposition disposicao = ContentDisposition
+                .builder(exibivel ? "inline" : "attachment")
+                .filename(arquivo.nome())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(arquivo.tipo())
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposicao.toString()
+                )
+                .cacheControl(CacheControl.noStore())
+                .body(arquivo.recurso());
+    }
+
+    @PutMapping("/fusex/{id}/decisao")
+    public PreGuiaResponse analisarPreGuia(
+            @PathVariable("id") Long id,
+            @RequestBody PreGuiaService.DecisaoPreGuiaRequest request
+    ) {
+        return preGuiaService.analisarPreGuia(id, request);
+    }
+
 }
