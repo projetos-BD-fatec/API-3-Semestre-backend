@@ -110,6 +110,14 @@ public class EspelhoService {
             );
         }
 
+        // O beneficiário precisa ter assinado (confirmado) a utilização da guia
+        if (!guia.isAssinada()) {
+            throw new IllegalStateException(
+                    "A guia ainda não foi assinada pelo beneficiário. " +
+                    "Colete a assinatura na tela da guia antes de abrir o espelho."
+            );
+        }
+
         // Cria somente quando ainda não existe
         espelho = espelhoRepository.save(
                 new Espelho(guia, prestador)
@@ -179,6 +187,11 @@ public class EspelhoService {
     @Transactional
     public EspelhoResponse salvar(Long idEspelho) {
         Espelho espelho = espelhoEditavel(idEspelho);
+
+        if (!espelho.getGuiaOficial().isAssinada()) {
+            throw new IllegalStateException(
+                    "A guia ainda não foi assinada pelo beneficiário. Colete a assinatura antes de salvar o espelho.");
+        }
 
         if (espelhoItemRepository.countByEspelho_IdEspelho(idEspelho) == 0) {
             throw new IllegalArgumentException("O espelho deve possuir pelo menos um item para ser salvo.");

@@ -3,6 +3,7 @@ package br.com.bughunters.fusexflow.entity;
 import br.com.bughunters.fusexflow.enums.StatusGuia;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,6 +33,18 @@ public class GuiaOficial {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StatusGuia status;
+
+    /** Último dia em que a guia pode ser utilizada (inclusive). */
+    @Column(name = "dt_validade")
+    private LocalDate dataValidade;
+
+    /** Quando o beneficiário assinou (confirmou) a utilização da guia. */
+    @Column(name = "dt_assinatura")
+    private LocalDateTime dataAssinatura;
+
+    /** Beneficiário que assinou. */
+    @Column(name = "id_usuario_assinante")
+    private Long idUsuarioAssinante;
 
     // Construtor exigido pelo JPA
     public GuiaOficial() {
@@ -110,5 +123,36 @@ public class GuiaOficial {
 
     public void setStatus(StatusGuia status) {
         this.status = status;
+    }
+
+    public LocalDate getDataValidade() {
+        return dataValidade;
+    }
+
+    public void setDataValidade(LocalDate dataValidade) {
+        this.dataValidade = dataValidade;
+    }
+
+    public LocalDateTime getDataAssinatura() {
+        return dataAssinatura;
+    }
+
+    public Long getIdUsuarioAssinante() {
+        return idUsuarioAssinante;
+    }
+
+    /** O beneficiário já assinou a utilização desta guia. */
+    public boolean isAssinada() {
+        return dataAssinatura != null;
+    }
+
+    /** Passou do último dia de validade (guias sem validade definida não vencem). */
+    public boolean vencidaEm(LocalDate hoje) {
+        return dataValidade != null && hoje.isAfter(dataValidade);
+    }
+
+    public void assinar(Long idUsuarioAssinante, LocalDateTime quando) {
+        this.idUsuarioAssinante = idUsuarioAssinante;
+        this.dataAssinatura = quando;
     }
 }

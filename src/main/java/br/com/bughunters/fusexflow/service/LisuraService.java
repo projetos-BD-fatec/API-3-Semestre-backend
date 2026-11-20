@@ -321,7 +321,8 @@ public class LisuraService {
                 totalFinal,
                 pendentes,
                 naoConfirmados,
-                guia.getStatus().name()
+                guia.getStatus().name(),
+                guia.getDataAssinatura()
         );
     }
 
