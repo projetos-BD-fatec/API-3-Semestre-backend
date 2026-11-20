@@ -5,6 +5,8 @@ import br.com.bughunters.fusexflow.dto.request.PreGuiaRequest;
 import br.com.bughunters.fusexflow.dto.response.PreGuiaItemResponse;
 import br.com.bughunters.fusexflow.dto.response.PreGuiaResponse;
 import br.com.bughunters.fusexflow.entity.*;
+import br.com.bughunters.fusexflow.enums.EtapaFluxo;
+import br.com.bughunters.fusexflow.enums.StatusPreGuia;
 import br.com.bughunters.fusexflow.repositories.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ public class PreGuiaService {
     private final ExamePrestadorRepository examePrestadorRepository;
     private final PreGuiaRepository preGuiaRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
+    private final HistoricoStatusService historicoStatusService;
 
     public PreGuiaService(ArquivoService arquivoService,
                           UsuarioRepository usuarioRepository,
@@ -32,7 +35,8 @@ public class PreGuiaService {
                           ExameRepository exameRepository,
                           ExamePrestadorRepository examePrestadorRepository,
                           PreGuiaRepository preGuiaRepository,
-                          PreGuiaItemRepository preGuiaItemRepository) {
+                          PreGuiaItemRepository preGuiaItemRepository,
+                          HistoricoStatusService historicoStatusService) {
         this.arquivoService = arquivoService;
         this.usuarioRepository = usuarioRepository;
         this.prestadorRepository = prestadorRepository;
@@ -40,6 +44,7 @@ public class PreGuiaService {
         this.examePrestadorRepository = examePrestadorRepository;
         this.preGuiaRepository = preGuiaRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
+        this.historicoStatusService = historicoStatusService;
     }
 
     /**
@@ -80,6 +85,16 @@ public class PreGuiaService {
 
         PreGuia preGuia = new PreGuia(usuario);
         preGuia = preGuiaRepository.save(preGuia);
+
+        // US17: primeira etapa do fluxo acompanhado pelo FUSEx.
+        historicoStatusService.registrar(
+                EtapaFluxo.SOLICITACAO,
+                preGuia.getIdPreGuia(),
+                null,
+                null,
+                StatusPreGuia.EM_ANALISE.name(),
+                "Solicitação aberta por " + usuario.getNmUsuario() + "."
+        );
 
         for (PreGuiaItemRequest itemRequest : request.itens()) {
 
