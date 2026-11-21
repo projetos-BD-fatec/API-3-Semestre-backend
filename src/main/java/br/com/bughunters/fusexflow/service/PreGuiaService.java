@@ -13,6 +13,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import br.com.bughunters.fusexflow.enums.StatusPreGuia;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.LocalDateTime;
+import br.com.bughunters.fusexflow.entity.GuiaOficial;
+import br.com.bughunters.fusexflow.repositories.GuiaOficialRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +34,7 @@ public class PreGuiaService {
     private final ExamePrestadorRepository examePrestadorRepository;
     private final PreGuiaRepository preGuiaRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
+    private final GuiaOficialRepository guiaOficialRepository;
     private final HistoricoStatusService historicoStatusService;
 
     public PreGuiaService(ArquivoService arquivoService,
@@ -35,6 +43,7 @@ public class PreGuiaService {
                           ExameRepository exameRepository,
                           ExamePrestadorRepository examePrestadorRepository,
                           PreGuiaRepository preGuiaRepository,
+                          PreGuiaItemRepository preGuiaItemRepository, GuiaOficialRepository guiaOficialRepository) {
                           PreGuiaItemRepository preGuiaItemRepository,
                           HistoricoStatusService historicoStatusService) {
         this.arquivoService = arquivoService;
@@ -44,6 +53,7 @@ public class PreGuiaService {
         this.examePrestadorRepository = examePrestadorRepository;
         this.preGuiaRepository = preGuiaRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
+        this.guiaOficialRepository = guiaOficialRepository;
         this.historicoStatusService = historicoStatusService;
     }
 
@@ -188,4 +198,231 @@ public class PreGuiaService {
                 itensResponse
         );
     }
+
+
+/* =====================================================
+   PAINEL DO COLABORADOR FUSEX
+===================================================== */
+
+
+    public record PreGuiaPainelResponse(
+            Long idPreGuia,
+            String nomeBeneficiario,
+            String emailBeneficiario,
+            String status,
+            LocalDateTime criadoEm,
+            boolean possuiEncaminhamento,
+            boolean solicitacaoPropria,
+            List<PreGuiaItemResponse> itens,
+            Long idAnalisadoPor,
+            LocalDateTime dataAnalise,
+            String motivoRecusa,
+            Long idGuiaOficial,
+            String codigoGuia,
+            String statusGuiaOficial
+    ) {
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<PreGuiaPainelResponse> listarParaColaborador() {
+
+        Usuario colaborador = usuarioLogado();
+        Long idColaborador = colaborador.getIdUsuario();
+
+        return preGuiaRepository.findAll()
+                .stream()
+                .map(preGuia -> {
+
+                    PreGuiaResponse dados = toResponse(preGuia);
+
+                    boolean propria = idColaborador.equals(
+                            preGuia.getUsuario().getIdUsuario()
+                    );
+
+                    GuiaOficial guiaOficial = guiaOficialRepository
+                            .findFirstBySolicitacaoIdOrderByIdDesc(
+                                    preGuia.getIdPreGuia()
+                            )
+                            .orElse(null);
+
+
+                    return new PreGuiaPainelResponse(
+                            preGuia.getIdPreGuia(),
+                            preGuia.getUsuario().getNmUsuario(),
+                            preGuia.getUsuario().getDsEmail(),
+                            preGuia.getStatus().name(),
+                            preGuia.getCriadoEm(),
+                            preGuia.getNmAnexo() != null
+                                    && !preGuia.getNmAnexo().isBlank(),
+                            propria,
+                            dados.itens(),
+                            preGuia.getAnalisadoPor() == null
+                                    ? null
+                                    : preGuia.getAnalisadoPor().getIdUsuario(),
+                            preGuia.getDataAnalise(),
+                            preGuia.getMotivoRecusa(),
+
+                            // Dados da guia oficial
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getId(),
+
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getCodigoGuia(),
+
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getStatus().name()
+                    );
+
+                })
+                .sorted((a, b) ->
+                        b.criadoEm().compareTo(a.criadoEm())
+                )
+                .toList();
+    }
+
+
+    @Transactional(readOnly = true)
+    public ArquivoDownload buscarArquivoParaColaborador(Long idPreGuia) {
+
+        PreGuia preGuia = preGuiaRepository.findById(idPreGuia)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Pré-guia não encontrada: " + idPreGuia
+                ));
+
+        String nomeArquivo = preGuia.getNmAnexo();
+
+        if (nomeArquivo == null || nomeArquivo.isBlank()) {
+            throw new EntityNotFoundException(
+                    "Esta pré-guia não possui encaminhamento anexado."
+            );
+        }
+
+        return new ArquivoDownload(
+                arquivoService.carregar(nomeArquivo),
+                arquivoService.tipoDoArquivo(nomeArquivo),
+                nomeArquivo
+        );
+    }
+
+
+/* =====================================================
+   DECISÃO DO COLABORADOR FUSEX
+===================================================== */
+
+    public record DecisaoPreGuiaRequest(
+            String decisao,
+            String motivoRecusa
+    ) {
+    }
+
+    @Transactional
+    public PreGuiaResponse analisarPreGuia(
+            Long idPreGuia,
+            DecisaoPreGuiaRequest request
+    ) {
+        Authentication autenticacao =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        boolean possuiPermissao = autenticacao != null
+                && autenticacao.isAuthenticated()
+                && autenticacao.getAuthorities().stream()
+                .anyMatch(autoridade ->
+                        autoridade.getAuthority().equals("ROLE_FUSEX")
+                                || autoridade.getAuthority().equals("ROLE_ADMIN")
+                );
+
+        if (!possuiPermissao) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Você não tem permissão para analisar pré-guias."
+            );
+        }
+
+        if (request == null || request.decisao() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Informe a decisão."
+            );
+        }
+
+        String decisao = request.decisao().trim().toUpperCase();
+
+        if (!decisao.equals("AUTORIZADA") && !decisao.equals("NEGADA")) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A decisão deve ser AUTORIZADA ou NEGADA."
+            );
+        }
+
+        Usuario colaborador = usuarioLogado();
+
+        PreGuia preGuia = preGuiaRepository
+                .buscarParaAnalise(idPreGuia)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Pré-guia não encontrada."
+                ));
+
+        // Bloqueio obrigatório: funcionário não analisa pedido próprio.
+        if (preGuia.getUsuario().getIdUsuario()
+                .equals(colaborador.getIdUsuario())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Você não pode aprovar ou negar sua própria solicitação."
+            );
+        }
+
+        if (preGuia.getStatus() != StatusPreGuia.EM_ANALISE) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Esta pré-guia já foi analisada."
+            );
+        }
+
+        String motivo = request.motivoRecusa() == null
+                ? ""
+                : request.motivoRecusa().trim();
+
+        if (decisao.equals("NEGADA") && motivo.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Informe o motivo da recusa."
+            );
+        }
+
+        if (motivo.length() > 1000) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O motivo deve ter no máximo 1000 caracteres."
+            );
+        }
+
+        StatusPreGuia novoStatus =
+                StatusPreGuia.valueOf(decisao);
+
+        preGuia.registrarDecisao(
+                novoStatus,
+                colaborador,
+                motivo
+        );
+
+        List<PreGuiaItem> itens =
+                preGuiaItemRepository.findByPreGuia_IdPreGuia(
+                        preGuia.getIdPreGuia()
+                );
+
+        for (PreGuiaItem item : itens) {
+            item.setStatus(novoStatus);
+        }
+
+        return toResponse(preGuia, itens);
+    }
+
+
+
 }
