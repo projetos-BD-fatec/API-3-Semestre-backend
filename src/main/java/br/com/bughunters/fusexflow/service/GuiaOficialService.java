@@ -52,7 +52,7 @@ public class GuiaOficialService {
             GuiaOficialRepository repository,
             UsuarioRepository usuarioRepository,
             PreGuiaItemRepository preGuiaItemRepository,
-            PreGuiaRepository preGuiaRepository
+            PreGuiaRepository preGuiaRepository,
             HistoricoStatusService historicoStatusService
     ) {
         this.repository = repository;
@@ -61,6 +61,7 @@ public class GuiaOficialService {
         this.preGuiaRepository = preGuiaRepository;
         this.historicoStatusService = historicoStatusService;
     }
+
 
 
     @Transactional(rollbackFor = IOException.class)
@@ -104,7 +105,7 @@ public class GuiaOficialService {
                         "Pré-guia não encontrada."
                 ));
 
-        // Impede emissão da própria guia
+        // Impede a emissão da própria guia
         if (Objects.equals(
                 preGuia.getUsuario().getIdUsuario(),
                 colaborador.getIdUsuario()
@@ -131,9 +132,9 @@ public class GuiaOficialService {
             );
         }
 
-        List<PreGuiaItem> itens =
-                preGuiaItemRepository
-                        .findByPreGuia_IdPreGuia(solicitacaoId);
+        // Busca os procedimentos da pré-guia
+        List<PreGuiaItem> itens = preGuiaItemRepository
+                .findByPreGuia_IdPreGuia(solicitacaoId);
 
         if (itens.isEmpty()) {
             throw new ResponseStatusException(
@@ -165,14 +166,17 @@ public class GuiaOficialService {
             );
         }
 
-        // Validação do arquivo
-        if (file == null || file.isEmpty()
+        // Validação do arquivo PDF
+        if (file == null
+                || file.isEmpty()
                 || !"application/pdf".equals(file.getContentType())) {
+
             throw new IllegalArgumentException(
                     "Arquivo deve ser um PDF válido."
             );
         }
 
+        // Limite máximo de 10 MB
         if (file.getSize() > 10L * 1024 * 1024) {
             throw new IllegalArgumentException(
                     "O PDF deve ter no máximo 10 MB."
@@ -181,6 +185,7 @@ public class GuiaOficialService {
 
         // Verifica a assinatura inicial do PDF
         try (var entrada = file.getInputStream()) {
+
             byte[] assinatura = entrada.readNBytes(5);
 
             if (!java.util.Arrays.equals(
@@ -195,18 +200,19 @@ public class GuiaOficialService {
             }
         }
 
-        // Armazena o documento
+        // Define o diretório de armazenamento
         Path diretorio = Paths.get(uploadDir)
                 .toAbsolutePath()
                 .normalize();
 
         Files.createDirectories(diretorio);
 
+        // Gera um nome único para armazenar o PDF
         String nomeUnico = UUID.randomUUID() + ".pdf";
 
         Path destino = diretorio.resolve(nomeUnico);
 
-        // Mantém a geração automática existente
+        // Gera automaticamente o código da guia oficial
         String codigoGuia = "GUIA-" +
                 UUID.randomUUID()
                         .toString()
@@ -214,8 +220,11 @@ public class GuiaOficialService {
                         .toUpperCase();
 
         try {
+
+            // Salva o arquivo PDF no servidor
             file.transferTo(destino);
 
+            // Cria a entidade da guia oficial
             GuiaOficial guia = new GuiaOficial(
                     null,
                     solicitacaoId,
@@ -226,31 +235,38 @@ public class GuiaOficialService {
                     StatusGuia.ATIVA
             );
 
-            return repository.saveAndFlush(guia);
+            // Salva a guia no banco de dados
+            GuiaOficial salva = repository.saveAndFlush(guia);
+
+            // Registra a emissão da guia no histórico de status
+            historicoStatusService.registrar(
+                    EtapaFluxo.EMISSAO,
+                    salva.getSolicitacaoId(),
+                    salva.getId(),
+                    null,
+                    StatusGuia.ATIVA.name(),
+                    "Guia " + salva.getCodigoGuia()
+                            + " emitida pelo FUSEx."
+            );
+
+            // Retorna a guia após registrar o histórico
+            return salva;
 
         } catch (IOException | RuntimeException erro) {
+
+            // Remove o PDF caso ocorra algum erro
+            // durante a emissão ou registro do histórico
             try {
                 Files.deleteIfExists(destino);
+
             } catch (IOException limpeza) {
                 erro.addSuppressed(limpeza);
             }
 
             throw erro;
         }
-        GuiaOficial salva = repository.save(guia);
-
-        // US17: a guia oficial emitida conclui a etapa de emissão.
-        historicoStatusService.registrar(
-                EtapaFluxo.EMISSAO,
-                salva.getSolicitacaoId(),
-                salva.getId(),
-                null,
-                StatusGuia.ATIVA.name(),
-                "Guia " + salva.getCodigoGuia() + " emitida pelo FUSEx."
-        );
-
-        return salva;
     }
+
 
 
 

@@ -37,15 +37,18 @@ public class PreGuiaService {
     private final GuiaOficialRepository guiaOficialRepository;
     private final HistoricoStatusService historicoStatusService;
 
-    public PreGuiaService(ArquivoService arquivoService,
-                          UsuarioRepository usuarioRepository,
-                          PrestadorRepository prestadorRepository,
-                          ExameRepository exameRepository,
-                          ExamePrestadorRepository examePrestadorRepository,
-                          PreGuiaRepository preGuiaRepository,
-                          PreGuiaItemRepository preGuiaItemRepository, GuiaOficialRepository guiaOficialRepository) {
-                          PreGuiaItemRepository preGuiaItemRepository,
-                          HistoricoStatusService historicoStatusService) {
+
+    public PreGuiaService(
+            ArquivoService arquivoService,
+            UsuarioRepository usuarioRepository,
+            PrestadorRepository prestadorRepository,
+            ExameRepository exameRepository,
+            ExamePrestadorRepository examePrestadorRepository,
+            PreGuiaRepository preGuiaRepository,
+            PreGuiaItemRepository preGuiaItemRepository,
+            GuiaOficialRepository guiaOficialRepository,
+            HistoricoStatusService historicoStatusService
+    ) {
         this.arquivoService = arquivoService;
         this.usuarioRepository = usuarioRepository;
         this.prestadorRepository = prestadorRepository;
@@ -56,6 +59,7 @@ public class PreGuiaService {
         this.guiaOficialRepository = guiaOficialRepository;
         this.historicoStatusService = historicoStatusService;
     }
+
 
     /**
      * Uso futuro: tela do funcionário FUSEX, que precisa ver todas as solicitações.
