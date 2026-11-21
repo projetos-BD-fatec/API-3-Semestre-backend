@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
+import br.com.bughunters.fusexflow.entity.GuiaOficial;
+import br.com.bughunters.fusexflow.repositories.GuiaOficialRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,6 +32,7 @@ public class PreGuiaService {
     private final ExamePrestadorRepository examePrestadorRepository;
     private final PreGuiaRepository preGuiaRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
+    private final GuiaOficialRepository guiaOficialRepository;
 
     public PreGuiaService(ArquivoService arquivoService,
                           UsuarioRepository usuarioRepository,
@@ -37,7 +40,7 @@ public class PreGuiaService {
                           ExameRepository exameRepository,
                           ExamePrestadorRepository examePrestadorRepository,
                           PreGuiaRepository preGuiaRepository,
-                          PreGuiaItemRepository preGuiaItemRepository) {
+                          PreGuiaItemRepository preGuiaItemRepository, GuiaOficialRepository guiaOficialRepository) {
         this.arquivoService = arquivoService;
         this.usuarioRepository = usuarioRepository;
         this.prestadorRepository = prestadorRepository;
@@ -45,6 +48,7 @@ public class PreGuiaService {
         this.examePrestadorRepository = examePrestadorRepository;
         this.preGuiaRepository = preGuiaRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
+        this.guiaOficialRepository = guiaOficialRepository;
     }
 
     /**
@@ -184,20 +188,25 @@ public class PreGuiaService {
    PAINEL DO COLABORADOR FUSEX
 ===================================================== */
 
+
     public record PreGuiaPainelResponse(
             Long idPreGuia,
             String nomeBeneficiario,
             String emailBeneficiario,
             String status,
-            java.time.LocalDateTime criadoEm,
+            LocalDateTime criadoEm,
             boolean possuiEncaminhamento,
             boolean solicitacaoPropria,
             List<PreGuiaItemResponse> itens,
             Long idAnalisadoPor,
             LocalDateTime dataAnalise,
-            String motivoRecusa
+            String motivoRecusa,
+            Long idGuiaOficial,
+            String codigoGuia,
+            String statusGuiaOficial
     ) {
     }
+
 
     @Transactional(readOnly = true)
     public List<PreGuiaPainelResponse> listarParaColaborador() {
@@ -215,6 +224,13 @@ public class PreGuiaService {
                             preGuia.getUsuario().getIdUsuario()
                     );
 
+                    GuiaOficial guiaOficial = guiaOficialRepository
+                            .findFirstBySolicitacaoIdOrderByIdDesc(
+                                    preGuia.getIdPreGuia()
+                            )
+                            .orElse(null);
+
+
                     return new PreGuiaPainelResponse(
                             preGuia.getIdPreGuia(),
                             preGuia.getUsuario().getNmUsuario(),
@@ -229,8 +245,22 @@ public class PreGuiaService {
                                     ? null
                                     : preGuia.getAnalisadoPor().getIdUsuario(),
                             preGuia.getDataAnalise(),
-                            preGuia.getMotivoRecusa()
+                            preGuia.getMotivoRecusa(),
+
+                            // Dados da guia oficial
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getId(),
+
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getCodigoGuia(),
+
+                            guiaOficial == null
+                                    ? null
+                                    : guiaOficial.getStatus().name()
                     );
+
                 })
                 .sorted((a, b) ->
                         b.criadoEm().compareTo(a.criadoEm())
