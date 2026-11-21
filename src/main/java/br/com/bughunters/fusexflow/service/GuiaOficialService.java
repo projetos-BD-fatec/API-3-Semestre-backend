@@ -60,7 +60,7 @@ public class GuiaOficialService {
             UsuarioRepository usuarioRepository,
             PreGuiaItemRepository preGuiaItemRepository,
             GuiaAssinaturaCodigoRepository codigoAssinaturaRepository,
-            RegrasGuiaProperties regras
+            RegrasGuiaProperties regras,
             PreGuiaRepository preGuiaRepository,
             HistoricoStatusService historicoStatusService
     ) {
@@ -246,6 +246,10 @@ public class GuiaOficialService {
                     StatusGuia.ATIVA
             );
 
+            // Validade: data de emissão (upload) + prazo configurado em
+            // application.properties (fusex.guia.validade-meses)
+            guia.setDataValidade(regras.calcularValidade(guia.getDataUpload()));
+
             // Salva a guia no banco de dados
             GuiaOficial salva = repository.saveAndFlush(guia);
 
@@ -263,11 +267,6 @@ public class GuiaOficialService {
             // Retorna a guia após registrar o histórico
             return salva;
 
-        // Validade: data de emissão (upload) + prazo configurado em
-        // application.properties (fusex.guia.validade-meses)
-        guia.setDataValidade(regras.calcularValidade(guia.getDataUpload()));
-
-        return repository.save(guia);
         } catch (IOException | RuntimeException erro) {
 
             // Remove o PDF caso ocorra algum erro

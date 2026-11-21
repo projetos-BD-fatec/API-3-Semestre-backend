@@ -34,6 +34,8 @@ public class GuiaOficial {
     @Column(name = "status", nullable = false)
     private StatusGuia status;
 
+    // ---------- validade e assinatura do beneficiário ----------
+
     /** Último dia em que a guia pode ser utilizada (inclusive). */
     @Column(name = "dt_validade")
     private LocalDate dataValidade;
@@ -45,6 +47,7 @@ public class GuiaOficial {
     /** Beneficiário que assinou. */
     @Column(name = "id_usuario_assinante")
     private Long idUsuarioAssinante;
+
     // ---------- liquidação: última etapa do fluxo (US17 / SCRUM-65) ----------
     // Fica em colunas próprias em vez de virar um novo valor de StatusGuia
     // para não apagar o resultado da Lisura: uma guia liquidada continua
@@ -140,6 +143,8 @@ public class GuiaOficial {
         this.status = status;
     }
 
+    // ---------- validade e assinatura ----------
+
     public LocalDate getDataValidade() {
         return dataValidade;
     }
@@ -170,7 +175,9 @@ public class GuiaOficial {
         this.idUsuarioAssinante = idUsuarioAssinante;
         this.dataAssinatura = quando;
     }
-}
+
+    // ---------- liquidação ----------
+
     public LocalDateTime getLiquidadoEm() {
         return liquidadoEm;
     }
