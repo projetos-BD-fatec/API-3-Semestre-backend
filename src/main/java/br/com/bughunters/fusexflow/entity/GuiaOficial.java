@@ -45,6 +45,21 @@ public class GuiaOficial {
     /** Beneficiário que assinou. */
     @Column(name = "id_usuario_assinante")
     private Long idUsuarioAssinante;
+    // ---------- liquidação: última etapa do fluxo (US17 / SCRUM-65) ----------
+    // Fica em colunas próprias em vez de virar um novo valor de StatusGuia
+    // para não apagar o resultado da Lisura: uma guia liquidada continua
+    // sendo uma guia LISURA_APROVADA.
+
+    @Column(name = "liquidado_em")
+    private LocalDateTime liquidadoEm;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_liquidacao")
+    private Usuario usuarioLiquidacao;
+
+    /** Total aprovado processado na liquidação (US16 / SCRUM-62). */
+    @Column(name = "valor_liquidado", precision = 14, scale = 2)
+    private java.math.BigDecimal valorLiquidado;
 
     // Construtor exigido pelo JPA
     public GuiaOficial() {
@@ -154,5 +169,41 @@ public class GuiaOficial {
     public void assinar(Long idUsuarioAssinante, LocalDateTime quando) {
         this.idUsuarioAssinante = idUsuarioAssinante;
         this.dataAssinatura = quando;
+    }
+}
+    public LocalDateTime getLiquidadoEm() {
+        return liquidadoEm;
+    }
+
+    public Usuario getUsuarioLiquidacao() {
+        return usuarioLiquidacao;
+    }
+
+    public java.math.BigDecimal getValorLiquidado() {
+        return valorLiquidado;
+    }
+
+    /** A guia já foi paga pelo FUSEx. */
+    public boolean foiLiquidada() {
+        return liquidadoEm != null;
+    }
+
+    /**
+     * Registra a liquidação: quem, quando e por quanto.
+     *
+     * As três informações andam juntas por causa da CK_GUIA_LIQUIDACAO —
+     * ou a guia está liquidada por inteiro, ou não está. Isso impede meia
+     * liquidação gravada por engano.
+     */
+    public void liquidar(Usuario responsavel, java.math.BigDecimal valor) {
+        if (responsavel == null) {
+            throw new IllegalArgumentException("A liquidação precisa de um responsável.");
+        }
+        if (valor == null || valor.signum() < 0) {
+            throw new IllegalArgumentException("A liquidação precisa de um valor não negativo.");
+        }
+        this.liquidadoEm = LocalDateTime.now();
+        this.usuarioLiquidacao = responsavel;
+        this.valorLiquidado = valor;
     }
 }

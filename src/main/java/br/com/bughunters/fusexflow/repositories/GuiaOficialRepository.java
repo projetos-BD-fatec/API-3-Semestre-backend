@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface GuiaOficialRepository extends JpaRepository<GuiaOficial, Long> {
 
@@ -26,4 +27,10 @@ public interface GuiaOficialRepository extends JpaRepository<GuiaOficial, Long> 
     default int marcarVencidas(LocalDate hoje) {
         return atualizarStatusDasVencidas(StatusGuia.VENCIDA, StatusGuia.ATIVA, hoje);
     }
+  
+    boolean existsBySolicitacaoId(Long solicitacaoId);
+
+    Optional<GuiaOficial> findFirstBySolicitacaoIdOrderByIdDesc(
+            Long solicitacaoId
+    );
 }

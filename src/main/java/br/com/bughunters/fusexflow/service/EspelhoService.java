@@ -8,6 +8,7 @@ import br.com.bughunters.fusexflow.dto.response.EspelhoResponse;
 import br.com.bughunters.fusexflow.dto.response.EspelhoSalvoResponse;
 import br.com.bughunters.fusexflow.dto.response.TussResponse;
 import br.com.bughunters.fusexflow.entity.*;
+import br.com.bughunters.fusexflow.enums.EtapaFluxo;
 import br.com.bughunters.fusexflow.enums.StatusEspelho;
 import br.com.bughunters.fusexflow.enums.StatusGuia;
 import br.com.bughunters.fusexflow.repositories.*;
@@ -38,6 +39,7 @@ public class EspelhoService {
     private final PreGuiaItemRepository preGuiaItemRepository;
     private final CatalogoTussRepository catalogoTussRepository;
     private final UsuarioRepository usuarioRepository;
+    private final HistoricoStatusService historicoStatusService;
 
     public EspelhoService(EspelhoRepository espelhoRepository,
                           EspelhoItemRepository espelhoItemRepository,
@@ -45,7 +47,8 @@ public class EspelhoService {
                           PreGuiaRepository preGuiaRepository,
                           PreGuiaItemRepository preGuiaItemRepository,
                           CatalogoTussRepository catalogoTussRepository,
-                          UsuarioRepository usuarioRepository) {
+                          UsuarioRepository usuarioRepository,
+                          HistoricoStatusService historicoStatusService) {
         this.espelhoRepository = espelhoRepository;
         this.espelhoItemRepository = espelhoItemRepository;
         this.guiaOficialRepository = guiaOficialRepository;
@@ -53,6 +56,7 @@ public class EspelhoService {
         this.preGuiaItemRepository = preGuiaItemRepository;
         this.catalogoTussRepository = catalogoTussRepository;
         this.usuarioRepository = usuarioRepository;
+        this.historicoStatusService = historicoStatusService;
     }
 
     /** Busca no catálogo TUSS por código ou descrição (máx. 20 resultados). */
@@ -200,6 +204,7 @@ public class EspelhoService {
         if (!espelho.isSalvo()) {
             espelho.salvar();
         }
+
         return toResponse(espelho);
     }
 
@@ -300,6 +305,19 @@ public class EspelhoService {
 
         LocalDateTime agora = LocalDateTime.now();
         lote.forEach(e -> e.enviar(agora));
+
+        // US17: o envio ao FUSEx conclui a etapa de faturamento de cada guia do lote.
+        for (Espelho espelho : lote) {
+            GuiaOficial guia = espelho.getGuiaOficial();
+            historicoStatusService.registrar(
+                    EtapaFluxo.FATURAMENTO,
+                    guia.getSolicitacaoId(),
+                    guia.getId(),
+                    StatusEspelho.SALVO.name(),
+                    StatusEspelho.ENVIADO.name(),
+                    "Espelho enviado por " + espelho.getPrestador().getNomeExibicao() + "."
+            );
+        }
 
         BigDecimal total = espelhoItemRepository
                 .findByEspelho_IdEspelhoIn(lote.stream().map(Espelho::getIdEspelho).toList())

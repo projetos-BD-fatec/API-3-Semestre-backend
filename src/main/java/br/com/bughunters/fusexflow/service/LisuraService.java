@@ -13,6 +13,7 @@ import br.com.bughunters.fusexflow.entity.LisuraRevisaoItem;
 import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.enums.DecisaoLisura;
+import br.com.bughunters.fusexflow.enums.EtapaFluxo;
 import br.com.bughunters.fusexflow.enums.StatusEspelho;
 import br.com.bughunters.fusexflow.enums.StatusGuia;
 import br.com.bughunters.fusexflow.repositories.EspelhoItemRepository;
@@ -59,6 +60,7 @@ public class LisuraService {
     private final PreGuiaRepository preGuiaRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
     private final UsuarioRepository usuarioRepository;
+    private final HistoricoStatusService historicoStatusService;
 
     public LisuraService(EspelhoRepository espelhoRepository,
                          EspelhoItemRepository espelhoItemRepository,
@@ -66,7 +68,8 @@ public class LisuraService {
                          LisuraRevisaoItemRepository revisaoRepository,
                          PreGuiaRepository preGuiaRepository,
                          PreGuiaItemRepository preGuiaItemRepository,
-                         UsuarioRepository usuarioRepository) {
+                         UsuarioRepository usuarioRepository,
+                         HistoricoStatusService historicoStatusService) {
         this.espelhoRepository = espelhoRepository;
         this.espelhoItemRepository = espelhoItemRepository;
         this.examePrestadorRepository = examePrestadorRepository;
@@ -74,6 +77,7 @@ public class LisuraService {
         this.preGuiaRepository = preGuiaRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
         this.usuarioRepository = usuarioRepository;
+        this.historicoStatusService = historicoStatusService;
     }
 
     // ---------- lista de espelhos enviados ----------
@@ -189,7 +193,20 @@ public class LisuraService {
             }
         }
 
+        StatusGuia statusAnterior = guia.getStatus();
         guia.setStatus(novoStatus);
+
+        // US17: a decisão da Lisura conclui a etapa de conferência.
+        historicoStatusService.registrar(
+                EtapaFluxo.LISURA,
+                guia.getSolicitacaoId(),
+                guia.getId(),
+                statusAnterior != null ? statusAnterior.name() : null,
+                novoStatus.name(),
+                novoStatus == StatusGuia.LISURA_APROVADA
+                        ? "Valores conferidos e aprovados para pagamento."
+                        : "Conferência recusada pela Lisura."
+        );
 
         return toResponse(espelho);
     }
