@@ -1,5 +1,6 @@
 package br.com.bughunters.fusexflow.service;
 
+import br.com.bughunters.fusexflow.config.RegrasGuiaProperties;
 import br.com.bughunters.fusexflow.dto.response.GuiaPrestadorDetalheResponse;
 import br.com.bughunters.fusexflow.dto.response.GuiaPrestadorResumoResponse;
 import br.com.bughunters.fusexflow.dto.response.GuiaProcedimentoResponse;
@@ -10,6 +11,7 @@ import br.com.bughunters.fusexflow.entity.Prestador;
 import br.com.bughunters.fusexflow.entity.Usuario;
 import br.com.bughunters.fusexflow.enums.EtapaFluxo;
 import br.com.bughunters.fusexflow.enums.StatusGuia;
+import br.com.bughunters.fusexflow.repositories.GuiaAssinaturaCodigoRepository;
 import br.com.bughunters.fusexflow.repositories.GuiaOficialRepository;
 import br.com.bughunters.fusexflow.repositories.PreGuiaItemRepository;
 import br.com.bughunters.fusexflow.repositories.UsuarioRepository;
@@ -30,7 +32,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -45,6 +50,8 @@ public class GuiaOficialService {
     private final GuiaOficialRepository repository;
     private final UsuarioRepository usuarioRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
+    private final GuiaAssinaturaCodigoRepository codigoAssinaturaRepository;
+    private final RegrasGuiaProperties regras;
     private final PreGuiaRepository preGuiaRepository;
     private final HistoricoStatusService historicoStatusService;
 
@@ -52,12 +59,16 @@ public class GuiaOficialService {
             GuiaOficialRepository repository,
             UsuarioRepository usuarioRepository,
             PreGuiaItemRepository preGuiaItemRepository,
+            GuiaAssinaturaCodigoRepository codigoAssinaturaRepository,
+            RegrasGuiaProperties regras
             PreGuiaRepository preGuiaRepository,
             HistoricoStatusService historicoStatusService
     ) {
         this.repository = repository;
         this.usuarioRepository = usuarioRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
+        this.codigoAssinaturaRepository = codigoAssinaturaRepository;
+        this.regras = regras;
         this.preGuiaRepository = preGuiaRepository;
         this.historicoStatusService = historicoStatusService;
     }
@@ -252,6 +263,11 @@ public class GuiaOficialService {
             // Retorna a guia após registrar o histórico
             return salva;
 
+        // Validade: data de emissão (upload) + prazo configurado em
+        // application.properties (fusex.guia.validade-meses)
+        guia.setDataValidade(regras.calcularValidade(guia.getDataUpload()));
+
+        return repository.save(guia);
         } catch (IOException | RuntimeException erro) {
 
             // Remove o PDF caso ocorra algum erro
@@ -295,6 +311,17 @@ public class GuiaOficialService {
         // se todos os seus procedimentos forem destinados a ele.
         for (PreGuiaItem item : todosItens) {
             validarPrestadorDoProcedimento(item, prestador);
+        }
+
+        // Guia fora do prazo de validade não pode mais ser utilizada
+        if (guia.getStatus() == StatusGuia.VENCIDA
+                || (guia.getStatus() == StatusGuia.ATIVA && guia.vencidaEm(LocalDate.now()))) {
+            throw new IllegalStateException(
+                    "Esta guia venceu" + (guia.getDataValidade() != null
+                            ? " em " + guia.getDataValidade().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                            : "")
+                            + " e não pode mais ser utilizada."
+            );
         }
 
         // Evita alteração de uma guia já utilizada ou encerrada
@@ -425,7 +452,7 @@ public class GuiaOficialService {
                             preGuia.getIdPreGuia(),
                             guia.getCodigoGuia(),
                             preGuia.getUsuario().getNmUsuario(),
-                            guia.getStatus().name(),
+                            statusExibicao(guia),
                             guia.getDataUpload(),
                             procedimentosRealizados,
                             totalProcedimentos
@@ -537,9 +564,17 @@ public class GuiaOficialService {
                 preGuia.getIdPreGuia(),
                 guia.getCodigoGuia(),
                 preGuia.getUsuario().getNmUsuario(),
-                guia.getStatus().name(),
+                statusExibicao(guia),
                 guia.getStatus().foiUtilizada(),
                 guia.getDataUpload(),
+                guia.getDataValidade(),
+                guia.getDataAssinatura(),
+                codigoAssinaturaRepository
+                        .findFirstByIdGuiaOficialAndInvalidadoEmIsNullAndExpiraEmAfterOrderByCriadoEmDesc(
+                                guia.getId(), LocalDateTime.now())
+                        .map(c -> Math.max(0L,
+                                Duration.between(LocalDateTime.now(), c.getExpiraEm()).getSeconds()))
+                        .orElse(null),
                 procedimentosRealizados,
                 itens.size(),
                 procedimentos
@@ -673,6 +708,17 @@ public class GuiaOficialService {
     }
 
 
+    /**
+     * Situação mostrada nas telas. Uma guia ATIVA fora do prazo já aparece como
+     * VENCIDA mesmo que o job diário ainda não tenha gravado isso no banco.
+     */
+    private String statusExibicao(GuiaOficial guia) {
+        if (guia.getStatus() == StatusGuia.ATIVA && guia.vencidaEm(LocalDate.now())) {
+            return StatusGuia.VENCIDA.name();
+        }
+
+        return guia.getStatus().name();
+    }
 
     private Prestador prestadorLogado() {
 

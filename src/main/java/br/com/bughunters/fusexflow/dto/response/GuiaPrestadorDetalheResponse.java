@@ -1,5 +1,6 @@
 package br.com.bughunters.fusexflow.dto.response;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,6 +12,9 @@ public record GuiaPrestadorDetalheResponse(
         String statusGuia,
         boolean guiaUtilizada,
         LocalDateTime dataUpload,
+        LocalDate dataValidade,
+        LocalDateTime dataAssinatura,
+        Long assinaturaCodigoSegundosRestantes,
         int procedimentosRealizados,
         int totalProcedimentos,
         List<GuiaProcedimentoResponse> procedimentos

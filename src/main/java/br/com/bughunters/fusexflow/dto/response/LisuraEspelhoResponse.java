@@ -14,6 +14,8 @@ import java.util.List;
  *                      na guia (NAO_CONFIRMADO) ou que nem estão na guia (FORA_DA_GUIA).
  * statusGuia: UTILIZADA enquanto aguarda a Lisura; LISURA_APROVADA ou
  *             LISURA_RECUSADA depois da decisão final do analista.
+ * guiaAssinadaEm: quando o beneficiário assinou (confirmou) a utilização da guia;
+ *                 nulo em guias antigas, anteriores à assinatura.
  */
 public record LisuraEspelhoResponse(
         Long idEspelho,
@@ -31,5 +33,6 @@ public record LisuraEspelhoResponse(
         BigDecimal totalFinal,
         long itensPendentes,
         long itensNaoConfirmados,
-        String statusGuia
+        String statusGuia,
+        LocalDateTime guiaAssinadaEm
 ) {}
