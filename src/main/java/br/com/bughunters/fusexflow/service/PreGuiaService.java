@@ -194,12 +194,23 @@ public class PreGuiaService {
                 ))
                 .toList();
 
+        // A guia é exibida somente após a autorização e emissão.
+        GuiaOficial guiaOficial = preGuia.getStatus() == StatusPreGuia.AUTORIZADA
+                ? guiaOficialRepository.findFirstBySolicitacaoIdOrderByIdDesc(
+                preGuia.getIdPreGuia()).orElse(null)
+                : null;
+
         return new PreGuiaResponse(
                 preGuia.getIdPreGuia(),
                 preGuia.getNmAnexo(),
                 preGuia.getStatus().name(),
                 preGuia.getCriadoEm(),
-                itensResponse
+                itensResponse,
+                preGuia.getStatus() == StatusPreGuia.NEGADA
+                        ? preGuia.getMotivoRecusa()
+                        : null,
+                guiaOficial == null ? null : guiaOficial.getId(),
+                guiaOficial == null ? null : guiaOficial.getCodigoGuia()
         );
     }
 
@@ -207,7 +218,6 @@ public class PreGuiaService {
 /* =====================================================
    PAINEL DO COLABORADOR FUSEX
 ===================================================== */
-
 
     public record PreGuiaPainelResponse(
             Long idPreGuia,
