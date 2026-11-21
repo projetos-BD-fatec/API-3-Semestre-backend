@@ -8,6 +8,7 @@ import br.com.bughunters.fusexflow.entity.PreGuia;
 import br.com.bughunters.fusexflow.entity.PreGuiaItem;
 import br.com.bughunters.fusexflow.entity.Prestador;
 import br.com.bughunters.fusexflow.entity.Usuario;
+import br.com.bughunters.fusexflow.enums.EtapaFluxo;
 import br.com.bughunters.fusexflow.enums.StatusGuia;
 import br.com.bughunters.fusexflow.repositories.GuiaOficialRepository;
 import br.com.bughunters.fusexflow.repositories.PreGuiaItemRepository;
@@ -45,17 +46,20 @@ public class GuiaOficialService {
     private final UsuarioRepository usuarioRepository;
     private final PreGuiaItemRepository preGuiaItemRepository;
     private final PreGuiaRepository preGuiaRepository;
+    private final HistoricoStatusService historicoStatusService;
 
     public GuiaOficialService(
             GuiaOficialRepository repository,
             UsuarioRepository usuarioRepository,
             PreGuiaItemRepository preGuiaItemRepository,
             PreGuiaRepository preGuiaRepository
+            HistoricoStatusService historicoStatusService
     ) {
         this.repository = repository;
         this.usuarioRepository = usuarioRepository;
         this.preGuiaItemRepository = preGuiaItemRepository;
         this.preGuiaRepository = preGuiaRepository;
+        this.historicoStatusService = historicoStatusService;
     }
 
 
@@ -233,6 +237,19 @@ public class GuiaOficialService {
 
             throw erro;
         }
+        GuiaOficial salva = repository.save(guia);
+
+        // US17: a guia oficial emitida conclui a etapa de emissão.
+        historicoStatusService.registrar(
+                EtapaFluxo.EMISSAO,
+                salva.getSolicitacaoId(),
+                salva.getId(),
+                null,
+                StatusGuia.ATIVA.name(),
+                "Guia " + salva.getCodigoGuia() + " emitida pelo FUSEx."
+        );
+
+        return salva;
     }
 
 
@@ -273,7 +290,21 @@ public class GuiaOficialService {
 
         guia.setStatus(StatusGuia.UTILIZADA);
 
-        return repository.save(guia);
+        GuiaOficial salva = repository.save(guia);
+
+        // US17: o prestador confirmou a utilização — etapa de realização.
+        // O prestador não é um usuário do FUSEx, então ele fica identificado
+        // na observação e o evento é gravado sem ID_USUARIO.
+        historicoStatusService.registrar(
+                EtapaFluxo.REALIZACAO,
+                salva.getSolicitacaoId(),
+                salva.getId(),
+                StatusGuia.ATIVA.name(),
+                StatusGuia.UTILIZADA.name(),
+                "Procedimentos realizados por " + prestador.getNomeExibicao() + "."
+        );
+
+        return salva;
     }
 
 
