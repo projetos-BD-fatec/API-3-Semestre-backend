@@ -73,6 +73,11 @@ public class Usuario {
         this.flAtivo = flAtivo;
     }
 
+    /** Vincula o usuário a uma OCS/prestador (conta institucional, login pelo CNPJ). */
+    public void setPrestador(Prestador prestador) {
+        this.prestador = prestador;
+    }
+
     public Long getIdUsuario() {
         return idUsuario;
     }

@@ -78,6 +78,8 @@ public class Prestador {
         this.nmCidade = nmCidade;
         this.sgUf = sgUf;
         this.nrCep = nrCep;
+        this.flAtivo = "S";
+        this.criadoEm = LocalDateTime.now();
     }
 
     public String getNomeExibicao() {
