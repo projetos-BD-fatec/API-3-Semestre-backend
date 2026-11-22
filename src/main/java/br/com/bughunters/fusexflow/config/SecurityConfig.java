@@ -45,6 +45,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login")
                         .permitAll()
 
+                        // Cadastro de OCS (prestador + responsável)
+                        .requestMatchers(HttpMethod.POST, "/ocs")
+                        .permitAll()
+
                         // Login de Prestador
                         .requestMatchers(HttpMethod.POST, "/prestador/login")
                         .permitAll()
