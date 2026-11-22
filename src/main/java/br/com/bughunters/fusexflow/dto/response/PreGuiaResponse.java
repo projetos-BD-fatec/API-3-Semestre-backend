@@ -8,5 +8,8 @@ public record PreGuiaResponse(
         String nmArquivo,
         String status,
         LocalDateTime criadoEm,
-        List<PreGuiaItemResponse> itens
+        List<PreGuiaItemResponse> itens,
+        String motivoRecusa,
+        Long idGuiaOficial,
+        String codigoGuia
 ) {}

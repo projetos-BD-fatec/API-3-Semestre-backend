@@ -27,6 +27,16 @@ public class PreGuia {
     @Column(name = "CRIADO_EM", nullable = false)
     private LocalDateTime criadoEm;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_ANALISADO_POR")
+    private Usuario analisadoPor;
+
+    @Column(name = "DT_ANALISE")
+    private LocalDateTime dataAnalise;
+
+    @Column(name = "MOTIVO_RECUSA", length = 1000)
+    private String motivoRecusa;
+
     protected PreGuia() {
     }
 
@@ -73,5 +83,32 @@ public class PreGuia {
 
     public Usuario getUsuario() {
         return usuario;
+    }
+
+    public Usuario getAnalisadoPor() {
+        return analisadoPor;
+    }
+
+    public LocalDateTime getDataAnalise() {
+        return dataAnalise;
+    }
+
+    public String getMotivoRecusa() {
+        return motivoRecusa;
+    }
+
+    public void registrarDecisao(
+            StatusPreGuia novoStatus,
+            Usuario colaborador,
+            String motivo
+    ) {
+        this.status = novoStatus;
+        this.analisadoPor = colaborador;
+        this.dataAnalise = LocalDateTime.now();
+
+        this.motivoRecusa =
+                novoStatus == StatusPreGuia.NEGADA
+                        ? motivo
+                        : null;
     }
 }

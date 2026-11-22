@@ -31,6 +31,9 @@ public class Espelho {
     @Column(name = "ATUALIZADO_EM")
     private LocalDateTime atualizadoEm;
 
+    @Column(name = "SALVO_EM")
+    private LocalDateTime salvoEm;
+
     @Column(name = "ENVIADO_EM")
     private LocalDateTime enviadoEm;
 
@@ -44,17 +47,39 @@ public class Espelho {
         this.criadoEm = LocalDateTime.now();
     }
 
+    /** A OCS pode alterar os itens enquanto o espelho não foi enviado ao FUSEx. */
     public boolean isEditavel() {
-        return status == StatusEspelho.RASCUNHO;
+        return status == StatusEspelho.RASCUNHO || status == StatusEspelho.SALVO;
+    }
+
+    public boolean isSalvo() {
+        return status == StatusEspelho.SALVO;
+    }
+
+    public boolean isEnviado() {
+        return status == StatusEspelho.ENVIADO;
     }
 
     public void marcarAtualizado() {
         this.atualizadoEm = LocalDateTime.now();
     }
 
-    public void enviar() {
+    /** Conclui o espelho: continua com a OCS até ela enviá-lo ao FUSEx. */
+    public void salvar() {
+        this.status = StatusEspelho.SALVO;
+        this.salvoEm = LocalDateTime.now();
+    }
+
+    /** Volta para rascunho (ex.: o último item de um espelho salvo foi excluído). */
+    public void voltarParaRascunho() {
+        this.status = StatusEspelho.RASCUNHO;
+        this.salvoEm = null;
+    }
+
+    /** Envia ao FUSEx. Em lote, todos os espelhos do lote recebem o mesmo horário. */
+    public void enviar(LocalDateTime quando) {
         this.status = StatusEspelho.ENVIADO;
-        this.enviadoEm = LocalDateTime.now();
+        this.enviadoEm = quando;
     }
 
     public Long getIdEspelho() { return idEspelho; }
@@ -63,5 +88,6 @@ public class Espelho {
     public StatusEspelho getStatus() { return status; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
+    public LocalDateTime getSalvoEm() { return salvoEm; }
     public LocalDateTime getEnviadoEm() { return enviadoEm; }
 }

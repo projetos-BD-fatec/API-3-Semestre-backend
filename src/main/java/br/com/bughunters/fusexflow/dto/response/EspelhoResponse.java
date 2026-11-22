@@ -9,6 +9,7 @@ public record EspelhoResponse(
         Long codigoGuia,
         String nomeBeneficiario,
         String status,
+        LocalDateTime salvoEm,
         LocalDateTime enviadoEm,
         List<EspelhoItemResponse> itens,
         BigDecimal valorTotal
